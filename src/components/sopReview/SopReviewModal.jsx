@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, CheckCircle2, XCircle, Award, Quote, Clock, Phone } from 'lucide-react';
 
 export default function SopReviewModal({ call, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!call) return null;
 
   const passedCount = call.sopReview.filter(r => r.pass).length;

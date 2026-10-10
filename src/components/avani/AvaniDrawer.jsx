@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Send, Bot, CheckCircle2, Lightbulb, Zap } from 'lucide-react';
 
 export default function AvaniDrawer({ isOpen, onClose }) {
@@ -11,6 +11,14 @@ export default function AvaniDrawer({ isOpen, onClose }) {
     }
   ]);
   const [input, setInput] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const promptChips = [
     { label: 'Name the shopper tactic', query: 'Why is naming the shopper important?' },

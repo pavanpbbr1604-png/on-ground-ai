@@ -28,6 +28,24 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     return () => clearInterval(timer);
   }, []);
 
+  // Keyboard Escape shortcut
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showWrapup) {
+          onClose();
+        } else {
+          setShowWrapup(true);
+          setWrapupSummary(
+            `Spoke with ${lead.name || 'customer'} regarding ${lead.product || 'Ortho GRID'}. Discussed spine relief, addressed pricing objection with 6-month zero-cost EMI, and highlighted 100-night trial. Customer requested quote via WhatsApp.`
+          );
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWrapup, onClose, lead]);
+
   // Simulate streaming transcript conversation over time
   useEffect(() => {
     if (transcriptIndex < LIVE_SIMULATION_TRANSCRIPT.length) {

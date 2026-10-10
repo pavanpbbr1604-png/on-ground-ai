@@ -12,6 +12,9 @@ class SoundFX {
         this.ctx = new AudioCtx();
       }
     }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
   }
 
   // Dual-frequency telecom ringback tone (440Hz + 480Hz)

@@ -104,13 +104,38 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {currentLeads.map((lead) => {
-          const isExpanded = expandedId === lead.id;
-          const scoreColor = getScoreColor(lead.attractivenessScore);
+        {sortedLeads.length === 0 ? (
+          <div style={{
+            background: '#fff',
+            borderRadius: '12px',
+            border: '1px solid #eceff4',
+            padding: '36px 20px',
+            textAlign: 'center',
+            color: '#6b6b74'
+          }}>
+            <Search size={28} color="#c5c8cf" style={{ margin: '0 auto 10px', display: 'block' }} />
+            <div style={{ fontSize: '14.5px', fontWeight: 700, color: '#1a1a1a', marginBottom: '4px' }}>
+              No leads matching "{searchQuery}"
+            </div>
+            <div style={{ fontSize: '12.5px', color: '#8e8e93', marginBottom: '14px' }}>
+              Try searching by shopper name, mattress product, or phone digits
+            </div>
+            <button
+              onClick={() => { setSearchQuery(''); setCurrentPage(0); }}
+              className="btn-secondary"
+              style={{ fontSize: '12.5px', padding: '6px 14px' }}
+            >
+              Clear Search Filter
+            </button>
+          </div>
+        ) : (
+          currentLeads.map((lead) => {
+            const isExpanded = expandedId === lead.id;
+            const scoreColor = getScoreColor(lead.attractivenessScore);
 
-          return (
-            <div
-              key={lead.id}
+            return (
+              <div
+                key={lead.id}
               style={{
                 background: '#fff',
                 borderRadius: '12px',
@@ -243,7 +268,8 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
               )}
             </div>
           );
-        })}
+        })
+      )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import IncomingCalls from './IncomingCalls';
 import RecentCalls from './RecentCalls';
 import { Phone, Sparkles } from 'lucide-react';
 
-export default function PlanView({ leads, onPlaceCall, onSelectCallForReview, onStartPracticeCall }) {
+export default function PlanView({ leads, recentCalls, onPlaceCall, onSelectCallForReview, onStartPracticeCall }) {
   const [subTab, setSubTab] = useState('outgoing');
 
   return (
@@ -64,7 +64,7 @@ export default function PlanView({ leads, onPlaceCall, onSelectCallForReview, on
         <IncomingCalls onPlaceCall={onPlaceCall} />
       )}
       {subTab === 'recent' && (
-        <RecentCalls onSelectCallForReview={onSelectCallForReview} />
+        <RecentCalls recentCalls={recentCalls} onSelectCallForReview={onSelectCallForReview} />
       )}
     </div>
   );

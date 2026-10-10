@@ -1,7 +1,16 @@
-import React from 'react';
-import { CheckCircle2, ChevronRight, Phone, MessageSquare, AlertCircle, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Circle, ChevronRight, Phone, MessageSquare, AlertCircle, ArrowUpRight } from 'lucide-react';
 
 export default function TasksList({ leads = [], onSelectLeadForModal, onStartCall }) {
+  const [completedTaskIds, setCompletedTaskIds] = useState([]);
+
+  const toggleTaskCompleted = (taskId, e) => {
+    e.stopPropagation();
+    setCompletedTaskIds(prev => 
+      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+    );
+  };
+
   const tasks = [
     {
       id: 'task-1',
@@ -47,22 +56,36 @@ export default function TasksList({ leads = [], onSelectLeadForModal, onStartCal
     medium: { bg: '#e8f0fe', color: '#185fa5', label: 'Follow-up' }
   };
 
+  const pendingCount = tasks.filter(t => !completedTaskIds.includes(t.id)).length;
+  const completedCount = completedTaskIds.length;
+
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
         <div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: '#1a1a1a' }}>Today's Prioritized Shift Tasks</div>
           <div style={{ fontSize: '12px', color: '#8e8e93', marginTop: '2px' }}>
-            Clicking any task opens the Lead Dossier & buying signals
+            Check off finished items or click any task to open Lead Dossier
           </div>
         </div>
-        <span style={{ fontSize: '12px', color: '#0f6e56', fontWeight: 700, background: '#e1f5ee', padding: '3px 8px', borderRadius: '6px' }}>
-          4 Pending
+        <span style={{ 
+          fontSize: '12px', 
+          color: pendingCount === 0 ? '#0f6e56' : '#185fa5', 
+          fontWeight: 700, 
+          background: pendingCount === 0 ? '#e1f5ee' : '#e8f0fe', 
+          padding: '3px 8px', 
+          borderRadius: '6px' 
+        }}>
+          {pendingCount === 0 
+            ? 'All Completed 🎉' 
+            : `${pendingCount} Pending${completedCount > 0 ? ` · ${completedCount} Done` : ''}`
+          }
         </span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {tasks.map((task) => {
+          const isDone = completedTaskIds.includes(task.id);
           const pStyle = priorityStyles[task.priority];
           return (
             <div
@@ -74,30 +97,70 @@ export default function TasksList({ leads = [], onSelectLeadForModal, onStartCal
                 justifyContent: 'space-between',
                 padding: '11px 14px',
                 borderRadius: '10px',
-                background: '#fbfcfe',
-                border: '1px solid #eceff4',
+                background: isDone ? '#f4f6f8' : '#fbfcfe',
+                border: isDone ? '1px solid #e1e4e8' : '1px solid #eceff4',
+                opacity: isDone ? 0.75 : 1,
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cadfd8'; e.currentTarget.style.background = '#f6fbf9'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#eceff4'; e.currentTarget.style.background = '#fbfcfe'; }}
+              onMouseEnter={(e) => { 
+                if (!isDone) {
+                  e.currentTarget.style.borderColor = '#cadfd8'; 
+                  e.currentTarget.style.background = '#f6fbf9'; 
+                }
+              }}
+              onMouseLeave={(e) => { 
+                if (!isDone) {
+                  e.currentTarget.style.borderColor = '#eceff4'; 
+                  e.currentTarget.style.background = '#fbfcfe'; 
+                }
+              }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                {/* Checkbox Toggle Button */}
+                <button
+                  onClick={(e) => toggleTaskCompleted(task.id, e)}
+                  title={isDone ? 'Mark as incomplete' : 'Mark as completed'}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '2px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: isDone ? '#0f6e56' : '#c5c8cf',
+                    transition: 'color 0.15s ease'
+                  }}
+                >
+                  {isDone ? <CheckCircle2 size={19} color="#0f6e56" /> : <Circle size={19} />}
+                </button>
+
                 <div style={{
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: task.type === 'call' ? '#e1f5ee' : '#e8f0fe',
+                  background: isDone ? '#e2e6ea' : task.type === 'call' ? '#e1f5ee' : '#e8f0fe',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  {task.type === 'call' ? <Phone size={15} color="#0f6e56" /> : <MessageSquare size={15} color="#185fa5" />}
+                  {task.type === 'call' 
+                    ? <Phone size={14} color={isDone ? '#8e8e93' : '#0f6e56'} /> 
+                    : <MessageSquare size={14} color={isDone ? '#8e8e93' : '#185fa5'} />
+                  }
                 </div>
 
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#1a1a1a' }}>{task.title}</div>
+                  <div style={{ 
+                    fontSize: '13.5px', 
+                    fontWeight: 700, 
+                    color: isDone ? '#8e8e93' : '#1a1a1a',
+                    textDecoration: isDone ? 'line-through' : 'none'
+                  }}>
+                    {task.title}
+                  </div>
                   <div style={{ fontSize: '12px', color: '#6b6b74', marginTop: '2px' }}>{task.product}</div>
                 </div>
               </div>

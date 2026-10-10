@@ -2,7 +2,9 @@ import React from 'react';
 import { PhoneOutgoing, PhoneIncoming, Clock, Award, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { RECENT_CALLS } from '../../data/callsData';
 
-export default function RecentCalls({ onSelectCallForReview }) {
+export default function RecentCalls({ recentCalls, onSelectCallForReview }) {
+  const calls = recentCalls || RECENT_CALLS;
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -13,12 +15,12 @@ export default function RecentCalls({ onSelectCallForReview }) {
           </div>
         </div>
         <span style={{ fontSize: '12px', color: '#6b6b74', fontWeight: 600 }}>
-          {RECENT_CALLS.length} calls logged today
+          {calls.length} calls logged today
         </span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {RECENT_CALLS.map((call) => {
+        {calls.map((call) => {
           const passCount = call.sopReview ? call.sopReview.filter(r => r.pass).length : 0;
           const totalSteps = call.sopReview ? call.sopReview.length : 6;
           const isHighAdherence = passCount >= 4;

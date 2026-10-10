@@ -4,8 +4,8 @@ import { CALENDAR_EVENTS } from '../../data/calendarData';
 
 export default function CalendarView({ onPlaceCall }) {
   // Current month: October 2026 (index 9)
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 10));
-  const [selectedDay, setSelectedDay] = useState(10);
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 11));
+  const [selectedDay, setSelectedDay] = useState(11);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -27,8 +27,8 @@ export default function CalendarView({ onPlaceCall }) {
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date(2026, 9, 10));
-    setSelectedDay(10);
+    setCurrentDate(new Date(2026, 9, 11));
+    setSelectedDay(11);
   };
 
   // Filter events for this month
@@ -62,7 +62,7 @@ export default function CalendarView({ onPlaceCall }) {
             className="btn-secondary"
             style={{ padding: '6px 12px', fontSize: '12.5px' }}
           >
-            Today (10 Oct)
+            Today (11 Oct)
           </button>
 
           <button
@@ -126,7 +126,7 @@ export default function CalendarView({ onPlaceCall }) {
               const dayNum = i + 1;
               const hasEvents = monthEvents.some(e => e.day === dayNum);
               const isSelected = selectedDay === dayNum;
-              const isToday = dayNum === 10 && month === 9 && year === 2026;
+              const isToday = dayNum === 11 && month === 9 && year === 2026;
 
               return (
                 <div

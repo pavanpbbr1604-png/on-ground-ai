@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Phone, MessageSquare, ChevronDown, ChevronUp, Sparkles, CheckCircle2, ShieldCheck, CreditCard } from 'lucide-react';
 
 export default function LeadsModal({ leads, selectedLead, onClose, onStartCall }) {
@@ -9,6 +9,14 @@ export default function LeadsModal({ leads, selectedLead, onClose, onStartCall }
   });
 
   const [signalsOpen, setSignalsOpen] = useState(true);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   if (!leads || leads.length === 0) return null;
 

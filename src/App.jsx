@@ -33,7 +33,19 @@ export default function App() {
   };
 
   const handleCallCompleted = (completedCall) => {
-    setRecentCalls([completedCall, ...recentCalls]);
+    setRecentCalls(prevCalls => [completedCall, ...prevCalls]);
+    if (completedCall.leadId) {
+      setLeads(prevLeads => prevLeads.map(l => {
+        if (l.id === completedCall.leadId) {
+          return {
+            ...l,
+            status: completedCall.outcome,
+            lastContact: 'Just now'
+          };
+        }
+        return l;
+      }));
+    }
   };
 
   return (
@@ -71,6 +83,7 @@ export default function App() {
           {activeTab === 'plan' && (
             <PlanView 
               leads={leads}
+              recentCalls={recentCalls}
               onPlaceCall={handleStartCall}
               onSelectCallForReview={(call) => setSelectedCallForReview(call)}
               onStartPracticeCall={() => handleStartCall(leads[0])}
