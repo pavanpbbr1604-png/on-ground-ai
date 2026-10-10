@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, Bell, Trophy, Zap, ChevronDown, User, LogOut, CheckCircle2 } from 'lucide-react';
 
-export default function Topbar({ activeTab, onToggleMobile, onOpenLeadsModal }) {
+export default function Topbar({ activeTab, onToggleMobile, onOpenLeadsModal, onOpenAvani }) {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
@@ -28,6 +28,28 @@ export default function Topbar({ activeTab, onToggleMobile, onOpenLeadsModal }) 
       </div>
 
       <div className="topbar-right">
+        {/* Ask Avani AI Button */}
+        <button
+          onClick={onOpenAvani}
+          style={{
+            background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '20px',
+            padding: '4px 10px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            boxShadow: '0 2px 6px rgba(124, 58, 237, 0.35)'
+          }}
+        >
+          <Sparkles size={13} />
+          <span>Ask Avani</span>
+        </button>
+
         {/* Global Rank Pills */}
         <div className="rank-pill gold">
           <Trophy size={13} />

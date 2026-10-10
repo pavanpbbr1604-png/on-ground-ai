@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PhoneOff, Mic, Sparkles, CheckCircle2, ShieldCheck, Send, MessageSquare, Clock, AlertCircle } from 'lucide-react';
+import { PhoneOff, Mic, Sparkles, CheckCircle2, ShieldCheck, Send, MessageSquare, Clock, AlertCircle, Zap } from 'lucide-react';
 import { SOP_ITEMS, LIVE_SIMULATION_TRANSCRIPT, AI_QUICK_REPLIES } from '../../data/callsData';
+import { soundFX } from '../../utils/audio';
 
 export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   const [callDuration, setCallDuration] = useState(0);
@@ -9,6 +10,15 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   const [showWrapup, setShowWrapup] = useState(false);
   const [wrapupOutcome, setWrapupOutcome] = useState('interested');
   const [wrapupSummary, setWrapupSummary] = useState('');
+
+  // Audio start tone & connect chime
+  useEffect(() => {
+    soundFX.playRingTone();
+    const connectTimer = setTimeout(() => {
+      soundFX.playConnectChime();
+    }, 1200);
+    return () => clearTimeout(connectTimer);
+  }, []);
 
   // Call timer
   useEffect(() => {
@@ -199,6 +209,19 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                 </div>
                 <div style={{ fontSize: '12px', color: '#581c87', marginTop: '2px' }}>
                   Cross-sell: Luxe Pillow pair · 6M No-cost EMI
+                </div>
+              </div>
+
+              {/* On-Ground.ai Proven Conversion Rule (+23.6pp Lift) */}
+              <div style={{ padding: '10px 14px', background: '#eefaf5', borderBottom: '1px solid #cce8de', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <Zap size={16} color="#0f6e56" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f6e56', textTransform: 'uppercase' }}>
+                    +23.6pp Conversion Rule · Floor AI Insight
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#134e4a', marginTop: '1px', lineHeight: 1.4 }}>
+                    Address shopper directly as <b>"{lead.name?.split(' ')[0] || 'the shopper'}"</b> in your needs discovery question to build psychological ownership.
+                  </div>
                 </div>
               </div>
 

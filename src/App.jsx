@@ -8,6 +8,7 @@ import PulseHome from './components/pulse/PulseHome';
 import LeadsModal from './components/leads/LeadsModal';
 import SopReviewModal from './components/sopReview/SopReviewModal';
 import LiveCallModal from './components/dialer/LiveCallModal';
+import AvaniDrawer from './components/avani/AvaniDrawer';
 
 import { LEADS_DATA } from './data/leadsData';
 import { RECENT_CALLS } from './data/callsData';
@@ -20,10 +21,11 @@ export default function App() {
   const [leads, setLeads] = useState(LEADS_DATA);
   const [recentCalls, setRecentCalls] = useState(RECENT_CALLS);
 
-  // Modals state
+  // Modals & Drawer state
   const [selectedLeadForModal, setSelectedLeadForModal] = useState(null);
   const [selectedCallForReview, setSelectedCallForReview] = useState(null);
   const [activeCallLead, setActiveCallLead] = useState(null);
+  const [avaniOpen, setAvaniOpen] = useState(false);
 
   // Call actions
   const handleStartCall = (lead) => {
@@ -52,6 +54,7 @@ export default function App() {
           activeTab={activeTab}
           onToggleMobile={() => setMobileOpen(!mobileOpen)}
           onOpenLeadsModal={() => setSelectedLeadForModal(leads[0])}
+          onOpenAvani={() => setAvaniOpen(true)}
         />
 
         {/* Dynamic View Content */}
@@ -114,6 +117,12 @@ export default function App() {
           onCallCompleted={handleCallCompleted}
         />
       )}
+
+      {/* 6. Avani AI Pitch Coach Drawer */}
+      <AvaniDrawer 
+        isOpen={avaniOpen}
+        onClose={() => setAvaniOpen(false)}
+      />
     </div>
   );
 }

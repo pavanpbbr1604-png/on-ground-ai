@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { Phone, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, Sparkles, ShoppingBag } from 'lucide-react';
+import { Phone, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, Sparkles, ShoppingBag, Search } from 'lucide-react';
 
 export default function OutgoingCalls({ leads = [], onPlaceCall }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
 
-  // Sorted by attractivenessScore descending
-  const sortedLeads = [...leads].sort((a, b) => (b.attractivenessScore || 0) - (a.attractivenessScore || 0));
-  const totalPages = Math.ceil(sortedLeads.length / itemsPerPage);
+  // Filter and sort by attractivenessScore descending
+  const filteredLeads = leads.filter(l => 
+    l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (l.product && l.product.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (l.phone && l.phone.includes(searchQuery))
+  );
+
+  const sortedLeads = [...filteredLeads].sort((a, b) => (b.attractivenessScore || 0) - (a.attractivenessScore || 0));
+  const totalPages = Math.ceil(sortedLeads.length / itemsPerPage) || 1;
   const currentLeads = sortedLeads.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const toggleExpand = (id) => {
@@ -23,7 +30,7 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: '#1a1a1a' }}>Calls to Make (Priority Ranked)</div>
           <div style={{ fontSize: '12px', color: '#8e8e93', marginTop: '2px' }}>
@@ -31,47 +38,68 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
           </div>
         </div>
 
-        {/* Pager */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '50%',
-              border: '1px solid #e5e5ea',
-              background: '#fff',
-              cursor: currentPage === 0 ? 'default' : 'pointer',
-              opacity: currentPage === 0 ? 0.4 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#6b6b74' }}>
-            Page {currentPage + 1} of {totalPages || 1}
-          </span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={currentPage >= totalPages - 1}
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '50%',
-              border: '1px solid #e5e5ea',
-              background: '#fff',
-              cursor: currentPage >= totalPages - 1 ? 'default' : 'pointer',
-              opacity: currentPage >= totalPages - 1 ? 0.4 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <ChevronRight size={16} />
-          </button>
+        {/* Search Bar + Pager */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', width: '200px' }}>
+            <Search size={14} color="#8e8e93" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
+              placeholder="Search leads..."
+              style={{
+                width: '100%',
+                padding: '6px 10px 6px 30px',
+                borderRadius: '8px',
+                border: '1px solid #e5e5ea',
+                fontSize: '12.5px',
+                outline: 'none',
+                background: '#fff'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                border: '1px solid #e5e5ea',
+                background: '#fff',
+                cursor: currentPage === 0 ? 'default' : 'pointer',
+                opacity: currentPage === 0 ? 0.4 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#6b6b74' }}>
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                border: '1px solid #e5e5ea',
+                background: '#fff',
+                cursor: currentPage >= totalPages - 1 ? 'default' : 'pointer',
+                opacity: currentPage >= totalPages - 1 ? 0.4 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
