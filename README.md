@@ -61,10 +61,14 @@ npm run preview
 | **9. Channel Chat** | ✅ Complete | Slack-style feed with back button, header, chat bubbles with timestamps, interactive text sending, and pinned **"Needs your input"** card with decision buttons. |
 | **10. Leads Modal** | ✅ Complete | Opens directly from the Dashboard task list. Displays customer card, ICP score, lead intent score, collapsible buying signals, and next/previous paging. |
 
-### Bonus Implementations
+### Bonus Implementations & Executive Plus Points
 * **Interactive Channel Messaging**: Send new messages in `#callcentre-team` with live UI state update.
 * **"Needs Your Input" Interactive Resolution**: Click "Accept Suggested Resolution" to resolve the QA greeting score card with live feedback.
 * **Interactive Live Call Simulator & Call Back**: Clicking "Place Call" or "Practise AI Call" launches a split-screen in-call cockpit with streaming real-time speech-to-text transcript on the left, and live AI Assist SOP checklist ticking off dynamically on the right, ending with an AI-drafted call wrap-up note.
+* **Web Audio Dialing Chimes**: Synthesized dual-tone telecom ringback (440Hz/480Hz) and connection chimes using the browser's Web Audio API for an authentic dialer experience.
+* **+23.6pp Shopper Naming Rule**: In-call AI coaching badge actively prompting reps to address the shopper by name (directly implementing On-Ground's 5,000-conversation floor study).
+* **Interactive "Ask Avani AI" Pitch Coach Drawer**: Slide-out assistant with instant retail objection chips (Wakefit pricing counter, 100-night trial rules, HDFC EMI breakdown).
+* **Live Search & Filter**: Real-time search across the Calling Plan queue by name, phone, or mattress model.
 * **Phone-width Responsiveness**: Fully responsive layout with mobile drawer navigation.
 * **Interactive 7-Day Performance Analytics**: Toggle between *Calls Made*, *Conversions*, and *SOP Adherence %*.
 
