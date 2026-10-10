@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Trophy, Zap, ChevronDown, User, LogOut, CheckCircle2 } from 'lucide-react';
+import { Menu, Bell, Trophy, Zap, ChevronDown, User, LogOut, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function Topbar({ activeTab, onToggleMobile, onOpenLeadsModal, onOpenAvani }) {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
