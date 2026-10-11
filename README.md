@@ -4,7 +4,9 @@ Rebuilt from the ground up as a high-performance, modular React web application 
 
 ---
 
-## 🚀 Live Demo & Quick Start
+## 🚀 Live Demo & Repository
+* **Live Production URL**: **[https://on-groundai.vercel.app](https://on-groundai.vercel.app)**
+* **GitHub Repository**: **[https://github.com/pavanpbbr1604-png/on-ground-ai](https://github.com/pavanpbbr1604-png/on-ground-ai)**
 
 ### Prerequisites
 * **Node.js**: v18+ (tested on Node v24 LTS)
