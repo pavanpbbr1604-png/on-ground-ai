@@ -15,7 +15,7 @@ Rebuilt from the ground up as a high-performance, modular React web application 
 ### Running Locally
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/pavanpbbr1604-png/on-ground-ai.git
 cd on_ground.ai
 
 # 2. Install dependencies
@@ -115,13 +115,19 @@ In accordance with the assignment guidelines:
 │   │   │   └── KudosFeed.jsx        # Team recognition feed
 │   │   ├── leads/
 │   │   │   └── LeadsModal.jsx       # ICP/Intent scores & collapsible buying signals
-│   │   └── dialer/
-│   │       └── LiveCallModal.jsx    # Live in-call simulator + AI Assist & wrap-up
+│   │   ├── dialer/
+│   │   │   └── LiveCallModal.jsx    # Live in-call simulator + AI Assist & wrap-up
+│   │   ├── avani/
+│   │   │   └── AvaniDrawer.jsx      # Avani AI pitch coaching drawer
+│   │   └── common/
+│   │       └── ErrorBoundary.jsx    # Graceful React error recovery wrapper
 │   ├── data/
 │   │   ├── leadsData.js             # Retail mattress leads dataset
 │   │   ├── callsData.js             # SOP steps, missed calls, transcripts
 │   │   ├── pulseData.js             # Channels, messages, kudos, AI actions
 │   │   └── calendarData.js          # Scheduled callbacks & appointments
+│   ├── utils/
+│   │   └── audio.js                 # Web Audio API telecom chimes engine
 │   ├── styles/
 │   │   └── index.css                # On-Ground.ai design system tokens
 │   ├── App.jsx                      # App root state & modal controller
