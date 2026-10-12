@@ -24,54 +24,18 @@ export default async function handler(req, res) {
   const DEFAULT_BLAND_KEY = 'org_e8071833b8e2ddf669c4118ba7979becf34952801063e6b4c286551868aecb67df14052eaad805850cf369';
   const effectiveBlandKey = apiKey || process.env.BLAND_API_KEY || DEFAULT_BLAND_KEY;
   const effectiveVapiKey = apiKey || process.env.VAPI_API_KEY;
-  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID || req.body?.twilioSid;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN || req.body?.twilioToken;
+  const DEFAULT_TWILIO_PHONE = '+17372508034';
+  const twilioPhone = process.env.TWILIO_PHONE_NUMBER || req.body?.twilioNumber || DEFAULT_TWILIO_PHONE;
 
-  // 1. If Bland AI Key is configured, trigger real AI voice phone call
-  if (effectiveBlandKey) {
-    try {
-      const response = await fetch('https://api.bland.ai/v1/calls', {
-        method: 'POST',
-        headers: {
-          'Authorization': effectiveBlandKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          phone_number: phoneNumber,
-          task: `You are Avani, frontline sales pitch coach and consultant at On-Ground.ai. You are calling ${customerName || 'the customer'} who visited the store regarding ${product || 'the Ortho GRID Pro mattress'}. Acknowledge their lower back pain support needs, explain our patented Japanese SmartGRID with 2,500 air channels, counter any price concerns with our 6-month zero-cost EMI (₹7,000/mo), and offer our 100-night risk-free trial. Be polite, warm, and professional.`,
-          voice: 'june',
-          reduce_latency: true
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        return res.status(response.status).json({
-          success: false,
-          error: data.message || data.error || 'Bland AI dispatch failed',
-          ...data
-        });
-      }
-      return res.status(200).json({
-        success: true,
-        provider: 'Bland AI',
-        callId: data.call_id || data.id,
-        status: 'ringing',
-        message: `Real AI call placed to ${phoneNumber}`,
-        ...data
-      });
-    } catch (err) {
-      console.error('Bland AI dispatch error:', err);
-    }
-  }
-
-  // 2. If Twilio is configured, place outbound Web-to-Phone call
-  if (twilioSid && twilioToken) {
+  // 1. If Twilio is configured with a phone number, place outbound PSTN call directly
+  if (twilioSid && twilioToken && twilioPhone) {
     try {
       const auth = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
       const params = new URLSearchParams({
-        To: phoneNumber,
-        From: process.env.TWILIO_PHONE_NUMBER || '+1234567890',
+        To: phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`,
+        From: twilioPhone,
         Url: 'https://demo.twilio.com/welcome/voice/'
       });
 
@@ -85,12 +49,21 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        return res.status(response.status).json({
+          success: false,
+          provider: 'Twilio Voice',
+          error: data.message || data.error || 'Twilio call failed',
+          ...data
+        });
+      }
+
       return res.status(200).json({
         success: true,
         provider: 'Twilio Voice',
         callSid: data.sid,
         status: data.status,
-        message: `Twilio call initiated to ${phoneNumber}`
+        message: `Twilio call ringing on ${phoneNumber}`
       });
     } catch (err) {
       console.error('Twilio dispatch error:', err);

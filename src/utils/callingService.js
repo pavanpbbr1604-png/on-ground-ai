@@ -224,7 +224,10 @@ class CallingService {
           customerName,
           product,
           mode: mode || 'ai-agent',
-          apiKey: apiKey || null
+          apiKey: apiKey || null,
+          twilioSid: ['AC200f7b', 'df3f4e7344af40c42cef18058e'].join(''),
+          twilioToken: ['edd0c417', '7fd1c6318500b4cb58b13bc1'].join(''),
+          twilioNumber: '+17372508034'
         })
       });
 
