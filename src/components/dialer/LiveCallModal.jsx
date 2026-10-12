@@ -40,12 +40,62 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   const [pstnNotice, setPstnNotice] = useState(null);
   const [isAiReplying, setIsAiReplying] = useState(false);
 
+  // Dynamic AI Sales Intelligence Card (Updates as conversation progresses)
+  const [activeAdvice, setActiveAdvice] = useState({
+    title: 'Needs Discovery & Posture',
+    tag: 'Step 1: Opening',
+    content: `Ask ${customerName} about their sleeping posture and any specific back pain or morning stiffness concerns.`,
+    sayText: `Hello ${customerName}, I am following up on your visit regarding our Ortho GRID mattress. Are you experiencing lower back pain or stiffness during sleep?`
+  });
+
   // Wrap-up state
   const [showWrapup, setShowWrapup] = useState(false);
   const [wrapupOutcome, setWrapupOutcome] = useState('interested');
   const [wrapupSummary, setWrapupSummary] = useState('');
 
-  const transcriptEndRef = useRef(null);
+  const chatScrollContainerRef = useRef(null);
+
+  // Update AI Advice card based on spoken keywords
+  const updateAiAdvice = (text) => {
+    if (!text) return;
+    const lower = text.toLowerCase();
+    if (lower.includes('pain') || lower.includes('back') || lower.includes('spine') || lower.includes('doctor') || lower.includes('stiff') || lower.includes('ortho')) {
+      setActiveAdvice({
+        title: 'Spine Alignment & Doctor Approval',
+        tag: 'Orthopaedic Feature',
+        content: 'Explain our 3-Zone Japanese SmartGRID. Unlike memory foam that sinks under hips causing lumbar curvature, SmartGRID maintains 8.5/10 firm spinal support while gently contouring shoulders.',
+        sayText: 'Our patented Japanese SmartGRID adapts dynamically to your pressure points, keeping your lower spine naturally aligned to eliminate morning stiffness.'
+      });
+    } else if (lower.includes('wakefit') || lower.includes('price') || lower.includes('cost') || lower.includes('expensive') || lower.includes('budget') || lower.includes('18000') || lower.includes('42000') || lower.includes('hotel') || lower.includes('luxury')) {
+      setActiveAdvice({
+        title: 'Price Justification vs Memory Foam',
+        tag: 'Objection Handling',
+        content: 'Wakefit uses polyurethane foam that sags within 18 months. Our hyper-elastic SmartGRID has a 10-year replacement warranty with 0% sagging. Pitch 6M zero-cost EMI at ₹7,000/mo.',
+        sayText: 'While standard foam mattresses lose support in two years, our SmartGRID has a 10-year warranty. With our 6-month zero-cost EMI, it is just ₹7,000 a month.'
+      });
+    } else if (lower.includes('channel') || lower.includes('air') || lower.includes('heat') || lower.includes('hot') || lower.includes('cool') || lower.includes('foam')) {
+      setActiveAdvice({
+        title: '2,500 Air Channels & SnowTec Cooling',
+        tag: 'Temperature Tech',
+        content: 'Traditional memory foam traps body heat. The Sleep Company SmartGRID features 2,500 open air channels with SnowTec fabric that dissipates body heat and stays 4°C cooler all night.',
+        sayText: 'Our mattress features 2,500 open air ventilation channels paired with SnowTec cooling fabric, keeping the surface 4 degrees cooler than normal foam.'
+      });
+    } else if (lower.includes('trial') || lower.includes('return') || lower.includes('refund') || lower.includes('guarantee') || lower.includes('100') || lower.includes('night')) {
+      setActiveAdvice({
+        title: '100-Night In-Home Risk-Free Trial',
+        tag: 'Risk Reversal',
+        content: 'Eliminate customer hesitation: they can sleep on it for 100 nights. If back pain does not improve, we arrange free doorstep pickup and 100% full money-back refund.',
+        sayText: 'You can test the mattress in your home for 100 nights. If it does not completely relieve your back pain, we pick it up for free and refund 100% of your money.'
+      });
+    } else if (lower.includes('emi') || lower.includes('card') || lower.includes('hdfc') || lower.includes('icici') || lower.includes('payment') || lower.includes('finance') || lower.includes('month')) {
+      setActiveAdvice({
+        title: '6-Month Zero-Cost EMI Available',
+        tag: 'Financing',
+        content: 'Available on all major bank cards (HDFC, ICICI, SBI) at ₹7,000/month for 6 months. Zero down payment, zero interest, instant approval.',
+        sayText: 'We offer 6-month zero-cost EMI starting at ₹7,000 per month on HDFC and ICICI cards, with zero interest and zero down payment.'
+      });
+    }
+  };
 
   // Handle staff spoken text (from microphone or manual input)
   const handleStaffSpeech = (text) => {
@@ -53,6 +103,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     const clean = text.trim();
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setTranscript(prev => [...prev, { speaker: 'staff', text: clean, time: nowTime }]);
+    updateAiAdvice(clean);
 
     // Dynamically check off SOP milestones based on actual conversation
     const lower = clean.toLowerCase();
@@ -83,11 +134,11 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     if (callMode === 'ai-agent') {
       setIsAiReplying(true);
       let reply = '';
-      if (lower.includes('price') || lower.includes('expensive') || lower.includes('cost') || lower.includes('wakefit')) {
+      if (lower.includes('price') || lower.includes('expensive') || lower.includes('cost') || lower.includes('wakefit') || lower.includes('hotel') || lower.includes('luxury')) {
         reply = `Wakefit offers basic foam, but our patented SmartGRID won't sag and gives orthopaedic spine alignment. Plus with zero-cost EMI, it's just ₹7,000 a month.`;
       } else if (lower.includes('trial') || lower.includes('return') || lower.includes('guarantee')) {
         reply = `Does the 100-night trial include a free doorstep pickup if it doesn't relieve my lower back pain?`;
-      } else if (lower.includes('emi') || lower.includes('payment') || lower.includes('card')) {
+      } else if (lower.includes('emi') || lower.includes('payment') || lower.includes('card') || lower.includes('month')) {
         reply = `₹7,000 per month sounds reasonable. Can I pay using my HDFC credit card at the Koramangala store?`;
       } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('calling')) {
         reply = `Hello, yes! I was looking for a firm orthopaedic mattress for my back pain. What do you recommend?`;
@@ -98,6 +149,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
       setTimeout(() => {
         setIsAiReplying(false);
         setTranscript(prev => [...prev, { speaker: 'customer', text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+        updateAiAdvice(reply);
         callingService.speakAiResponse(reply);
       }, 1000);
     }
@@ -112,8 +164,14 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
       handleStaffSpeech(text);
     } else {
       setTranscript(prev => [...prev, { speaker: 'customer', text: text, time: nowTime }]);
+      updateAiAdvice(text);
       callingService.speakAiResponse(text);
     }
+  };
+
+  const handleUseAdvice = (textToSay) => {
+    handleStaffSpeech(textToSay);
+    callingService.speakAiResponse(textToSay);
   };
 
   // 1. Initial Call Connect & Ringtones
@@ -159,10 +217,10 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     }
   }, [callStatus]);
 
-  // 3. Auto-scroll down when talking or new speech arrives; stops scrolling when silence
+  // 3. Bulletproof Auto-scroll to bottom of chat container
   useEffect(() => {
-    if (transcriptEndRef.current && (transcript.length > 0 || interimText || isAiReplying)) {
-      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTop = chatScrollContainerRef.current.scrollHeight;
     }
   }, [transcript, interimText, isAiReplying]);
 
@@ -501,12 +559,12 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
           </div>
         )}
 
-        {/* In-Call Body: Split Screen (Left: Live Audio & Transcript, Right: AI Assist) */}
+        {/* In-Call Body: Split Screen (Left: Live Audio & Transcript, Right: AI Sales Coach) */}
         {!showWrapup ? (
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(340px, 1.4fr) minmax(300px, 1fr)', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(340px, 1.35fr) minmax(320px, 1.15fr)', overflow: 'hidden' }}>
             
             {/* Left: Live Audio VU-Meter & Speech Transcript */}
-            <div style={{ background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }}>
               
               {/* Live Audio Visualizer Banner */}
               <div style={{ 
@@ -553,8 +611,19 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                 </div>
               </div>
 
-              {/* Streaming Transcript */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Streaming Transcript with Bulletproof Inner Scroll */}
+              <div 
+                ref={chatScrollContainerRef}
+                style={{ 
+                  flex: 1, 
+                  minHeight: 0, 
+                  overflowY: 'auto', 
+                  padding: '16px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '12px' 
+                }}
+              >
                 {transcript.length === 0 && !interimText && (
                   <div style={{ textAlign: 'center', padding: '36px 16px', background: '#fff', borderRadius: '12px', border: '1px dashed #cbd5e1', margin: 'auto 0' }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎙️</div>
@@ -588,7 +657,11 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '3px' }}>
                         <span style={{ fontSize: '11px', fontWeight: 800, color: isStaff ? '#0f6e56' : '#1e293b' }}>
-                          {isStaff ? 'You (Staff Agent · Mic)' : `${customerName} (Customer)`}
+                          {isStaff 
+                            ? 'You (Sales Agent · Mic) 🎙️' 
+                            : callMode === 'ai-agent'
+                              ? `${customerName} (AI Simulated Buyer) 🤖`
+                              : `${customerName} (Customer on Phone) 📱`}
                         </span>
                         <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>{t.time}</span>
                       </div>
@@ -764,43 +837,102 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
 
             </div>
 
-            {/* Right: AI Assist & Sales SOP Checklist */}
-            <div style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+            {/* Right: AI Sales Coach & Mattress Tech Dossier */}
+            <div style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflowY: 'auto' }}>
               
-              {/* Objective Banner */}
-              <div style={{ padding: '14px 16px', background: '#faf8ff', borderBottom: '1px solid #ece2fb' }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: '#6b21a8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Sparkles size={13} />
-                  <span>Target Product & Cross-Sell Pitch</span>
+              {/* Dynamic Live AI Sales Assistant Card (Auto-adapts to what customer asks) */}
+              <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', borderBottom: '1px solid #ddd6fe' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#6d28d9', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Sparkles size={14} className="pulse" />
+                    <span>Live AI Pitch Coach · Real-Time Detection</span>
+                  </div>
+                  <span style={{ fontSize: '10px', background: '#7c3aed', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
+                    {activeAdvice.tag}
+                  </span>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e1b4b', marginTop: '2px' }}>
-                  {lead.product || 'Ortho GRID Pro Mattress (₹42,000)'}
+
+                <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#2e1065', marginTop: '2px' }}>
+                  {activeAdvice.title}
                 </div>
-                <div style={{ fontSize: '12px', color: '#581c87', marginTop: '2px' }}>
-                  Cross-sell: Luxe Ergo Pillows · 6M No-cost EMI (₹7,000/mo)
+                <div style={{ fontSize: '12px', color: '#4c1d95', marginTop: '3px', lineHeight: 1.45 }}>
+                  {activeAdvice.content}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleUseAdvice(activeAdvice.sayText)}
+                  style={{
+                    marginTop: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: '#0f6e56',
+                    color: '#fff',
+                    border: 'none',
+                    fontWeight: 700,
+                    fontSize: '11.5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 6px rgba(15, 110, 86, 0.25)'
+                  }}
+                  title="Click to automatically speak and insert this recommendation"
+                >
+                  <Send size={12} />
+                  <span>Say This: "{activeAdvice.sayText.slice(0, 48)}..."</span>
+                </button>
+              </div>
+
+              {/* Mattress Specification Dossier (The Sleep Company) */}
+              <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Radio size={12} color="#0f6e56" />
+                  <span>Mattress Specs: Ortho GRID Pro (₹42,000)</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <div style={{ background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f6e56' }}>2,500 Air Channels</div>
+                    <div style={{ color: '#64748b', fontSize: '10px' }}>4°C cooler than memory foam</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f6e56' }}>8.5/10 Firmness</div>
+                    <div style={{ color: '#64748b', fontSize: '10px' }}>Doctor recommended spine support</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f6e56' }}>10-Year Warranty</div>
+                    <div style={{ color: '#64748b', fontSize: '10px' }}>Zero sagging guarantee</div>
+                  </div>
+                  <div style={{ background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '11px' }}>
+                    <div style={{ fontWeight: 800, color: '#0f6e56' }}>₹7,000/mo EMI</div>
+                    <div style={{ color: '#64748b', fontSize: '10px' }}>6M zero-cost on HDFC/ICICI</div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '6px', background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '11px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 700, color: '#1e293b' }}>🌙 100-Night In-Home Trial:</span>
+                  <span style={{ color: '#0f6e56', fontWeight: 800 }}>Free Doorstep Return & 100% Refund</span>
                 </div>
               </div>
 
               {/* On-Ground.ai Proven Conversion Rule (+23.6pp Lift) */}
-              <div style={{ padding: '10px 14px', background: '#eefaf5', borderBottom: '1px solid #cce8de', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <Zap size={16} color="#0f6e56" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f6e56', textTransform: 'uppercase' }}>
-                    +23.6pp Conversion Rule · Floor AI Insight
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#134e4a', marginTop: '1px', lineHeight: 1.4 }}>
-                    Address shopper directly as <b>"{lead.name?.split(' ')[0] || 'the shopper'}"</b> during needs discovery to build rapport and psychological ownership.
-                  </div>
+              <div style={{ padding: '8px 14px', background: '#eefaf5', borderBottom: '1px solid #cce8de', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={15} color="#0f6e56" style={{ flexShrink: 0 }} />
+                <div style={{ fontSize: '11.5px', color: '#134e4a', lineHeight: 1.35 }}>
+                  <b>+23.6pp Rule:</b> Address customer directly as <b>"{customerName?.split(' ')[0] || 'the shopper'}"</b> to build rapport.
                 </div>
               </div>
 
               {/* Dynamic SOP Checklist */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>
                   Live SOP Compliance (Ticks As You Speak)
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {SOP_ITEMS.map((item, idx) => {
                     const isChecked = sopChecked[idx];
                     return (
@@ -810,15 +942,15 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          padding: '6px 8px',
+                          padding: '5px 8px',
                           borderRadius: '6px',
                           background: isChecked ? '#f0fdf4' : '#f8fafc',
                           border: isChecked ? '1px solid #bbf7d0' : '1px solid #f1f5f9',
                           transition: 'all 0.3s ease'
                         }}
                       >
-                        <CheckCircle2 size={16} color={isChecked ? '#0f6e56' : '#cbd5e1'} />
-                        <span style={{ fontSize: '12.5px', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#14532d' : '#64748b' }}>
+                        <CheckCircle2 size={15} color={isChecked ? '#0f6e56' : '#cbd5e1'} />
+                        <span style={{ fontSize: '12px', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#14532d' : '#64748b' }}>
                           {item.label}
                         </span>
                       </div>
@@ -827,39 +959,43 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                 </div>
               </div>
 
-              {/* Instant AI Suggested Quick Replies */}
-              <div style={{ padding: '14px 16px', flex: 1 }}>
-                <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Avani AI Live Nudges (Click To Speak)
+              {/* Instant Objection & Feature Prompts */}
+              <div style={{ padding: '12px 16px', flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  Instant Sales Nudges (Click To Pitch)
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {AI_QUICK_REPLIES.map((reply, rIdx) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {[
+                    { label: 'Explain 2,500 Air Channels & Cooling', text: 'Our patented Japanese SmartGRID features 2,500 open air ventilation channels and SnowTec cooling fabric, keeping you 4 degrees cooler than memory foam all night.' },
+                    { label: 'Counter Wakefit / Foam Price Objection', text: 'Unlike cheap memory foam that sags within 2 years, our hyper-elastic SmartGRID has a 10-year warranty with zero sagging. With zero-cost EMI, it is just ₹7,000 a month.' },
+                    { label: 'Explain Doctor-Approved Back Pain Support', text: 'The Ortho GRID gives you 8.5 out of 10 firmness, engineered specifically to cradle your lower back and keep your spine in natural alignment.' },
+                    { label: 'Pitch 100-Night Risk-Free Trial', text: 'You can test the mattress in your home for 100 nights. If your back pain does not improve, we pick it up from your doorstep and give you a 100% full refund.' }
+                  ].map((nudge, nIdx) => (
                     <button
-                      key={rIdx}
-                      onClick={() => {
-                        callingService.speakAiResponse(reply);
-                        setTranscript(prev => [...prev, { speaker: 'staff', text: reply, time: 'Just now' }]);
-                      }}
+                      key={nIdx}
+                      type="button"
+                      onClick={() => handleUseAdvice(nudge.text)}
                       style={{
                         background: '#f8fafc',
                         border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
                         textAlign: 'left',
-                        fontSize: '12.5px',
+                        fontSize: '11.5px',
                         color: '#1e293b',
                         fontWeight: 600,
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
+                        transition: 'all 0.15s ease'
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0f6e56'; e.currentTarget.style.background = '#f0fdf4'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
                     >
-                      <span>{reply}</span>
-                      <Send size={13} color="#0f6e56" />
+                      <span>{nudge.label}</span>
+                      <Send size={11} color="#0f6e56" />
                     </button>
                   ))}
                 </div>
