@@ -77,6 +77,7 @@ class CallingService {
   }
 
   // Real-time Speech-to-Text using native Web Speech API
+  // Real-time Speech-to-Text using native Web Speech API (English only)
   startSpeechRecognition(onTranscriptCallback, onErrorCallback) {
     if (typeof window === 'undefined') return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -89,7 +90,7 @@ class CallingService {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
-      this.recognition.lang = 'en-IN'; // Indian English accent for retail call centre
+      this.recognition.lang = 'en-US'; // Pure English recognition
 
       this.recognition.onresult = (event) => {
         let interimTranscript = '';
@@ -139,21 +140,28 @@ class CallingService {
     }
   }
 
-  // Speak AI response through speakers using Web Speech Synthesis
+  // Speak AI response through speakers using Web Speech Synthesis (Strictly Clear English)
   speakAiResponse(text, onStart, onEnd) {
     if (!this.speechSynth) return;
     this.speechSynth.cancel(); // Stop any pending speech
 
     const cleanText = text.replace(/[*_#]/g, '');
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.05; // Slightly faster natural call centre pace
-    utterance.pitch = 1.02;
-    utterance.lang = 'en-IN';
+    utterance.rate = 1.0; // Clear, natural pace
+    utterance.pitch = 1.0;
+    utterance.lang = 'en-US'; // English language only
 
-    // Pick warm voice if available
+    // Explicitly pick an English voice (en-US or en-GB)
     const voices = this.speechSynth.getVoices();
-    const preferredVoice = voices.find(v => v.lang.includes('en-IN') || v.name.includes('Google') || v.name.includes('Natural'));
-    if (preferredVoice) utterance.voice = preferredVoice;
+    const englishVoice = voices.find(v => 
+      (v.lang === 'en-US' || v.lang === 'en-GB') && 
+      (v.name.includes('Natural') || v.name.includes('Zira') || v.name.includes('Jenny') || v.name.includes('Google US') || v.name.includes('David') || v.name.includes('Samantha'))
+    ) || voices.find(v => v.lang.startsWith('en'));
+
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+      utterance.lang = englishVoice.lang;
+    }
 
     if (onStart) utterance.onstart = onStart;
     if (onEnd) utterance.onend = onEnd;

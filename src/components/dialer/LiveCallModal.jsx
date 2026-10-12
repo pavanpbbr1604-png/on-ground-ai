@@ -149,6 +149,38 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     };
   }, [callMode, customerName]);
 
+  // 2. Call Duration Clock
+  useEffect(() => {
+    if (callStatus === 'connected' || callStatus === 'pstn-active') {
+      const timer = setInterval(() => {
+        setCallDuration(d => d + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [callStatus]);
+
+  // 3. Auto-scroll down when talking or new speech arrives; stops scrolling when silence
+  useEffect(() => {
+    if (transcriptEndRef.current && (transcript.length > 0 || interimText || isAiReplying)) {
+      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [transcript, interimText, isAiReplying]);
+
+  // 4. Keyboard Escape Shortcut
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showWrapup) {
+          onClose();
+        } else {
+          handleEndCall();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWrapup, onClose]);
+
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60);
     const rem = secs % 60;
