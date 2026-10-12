@@ -9,11 +9,11 @@ import { callingService } from '../../utils/callingService';
 
 export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   // Call Configuration & Mode
-  const [customerName, setCustomerName] = useState(lead?.name || 'Customer');
-  const [targetPhone, setTargetPhone] = useState(lead?.phone || '+91 98765 43210');
+  const [customerName, setCustomerName] = useState(lead?.name || 'Pavan B R');
+  const [targetPhone, setTargetPhone] = useState(lead?.phone || '+919480850001');
   const [isEditingContact, setIsEditingContact] = useState(false);
-  const [tempName, setTempName] = useState(lead?.name || 'Customer');
-  const [tempPhone, setTempPhone] = useState(lead?.phone || '+91 98765 43210');
+  const [tempName, setTempName] = useState(lead?.name || 'Pavan B R');
+  const [tempPhone, setTempPhone] = useState(lead?.phone || '+919480850001');
   const [callStatus, setCallStatus] = useState('connecting'); // 'connecting' | 'ringing' | 'connected' | 'pstn-active'
   const [callDuration, setCallDuration] = useState(0);
   const [callMode, setCallMode] = useState('ai-agent'); // 'ai-agent' | 'human-agent'
@@ -181,6 +181,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     const connectTimer = setTimeout(() => {
       soundFX.playConnectChime();
       setCallStatus('connected');
+      handleDispatchPstnCall();
     }, 1200);
 
     // Request actual microphone input for live audio meter

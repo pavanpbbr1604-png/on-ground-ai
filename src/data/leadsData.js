@@ -1,6 +1,32 @@
 // Retail Leads Dataset (The Sleep Company)
 export const LEADS_DATA = [
   {
+    id: 'lead-pavan',
+    name: 'Pavan B R',
+    initials: 'PB',
+    avatarBg: '#dcfce7',
+    avatarColor: '#15803d',
+    phone: '+919480850001',
+    interest: 'Verified Mobile Phone · Instant Carrier Calling',
+    product: 'Ortho GRID Pro Mattress, King Size (₹42,000)',
+    crossSell: 'SmartGRID Luxe Pillow (Pair) + Waterproof Protector',
+    emi: '6 months no-cost EMI available (₹7,000/mo)',
+    attractivenessScore: 99,
+    intentScore: 99,
+    icpScore: 98,
+    expectedValue: 42000,
+    status: 'Verified Cell Phone · Ready to Call',
+    signals: [
+      { type: 'Verified Phone', text: 'Carrier-verified mobile (+919480850001) connected to Twilio gateway' },
+      { type: 'Financing', text: 'Prefers 6M zero-cost EMI (₹7,000/mo) on HDFC/ICICI' },
+      { type: 'High Intent', text: 'Interested in Ortho GRID 8.5/10 spine alignment and 2,500 air channels' }
+    ],
+    journey: [
+      { date: 'Today', text: 'Direct verified contact for live PSTN calling evaluation.' }
+    ],
+    notes: 'Direct mobile phone of Pavan B R. Calling instantly rings his real physical cell phone.'
+  },
+  {
     id: 'lead-1',
     name: 'Mukunda R.',
     initials: 'MK',
