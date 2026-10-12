@@ -106,6 +106,18 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     setTranscript(prev => [...prev, { speaker: 'staff', text: clean, time: nowTime }]);
     updateAiAdvice(clean);
 
+    // Broadcast to handset receiver via /api/signal
+    fetch('/api/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: targetPhone,
+        action: 'speak',
+        role: 'agent',
+        payload: { text: clean }
+      })
+    }).catch(() => {});
+
     // Dynamically check off SOP milestones based on actual conversation
     const lower = clean.toLowerCase();
     setSopChecked(prev => {
@@ -243,6 +255,32 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showWrapup, onClose]);
+
+  // 5. Sync customer messages from connected mobile handset (/phone)
+  const lastCustCount = useRef(0);
+  useEffect(() => {
+    const cleanPhone = (targetPhone || '9480850001').replace(/[^0-9]/g, '').slice(-10);
+    const syncInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/signal?phone=${cleanPhone}`);
+        const data = await res.json();
+        if (data.success && data.session) {
+          const custMsgs = data.session.customerMessages || [];
+          if (custMsgs.length > lastCustCount.current) {
+            const newMsgs = custMsgs.slice(lastCustCount.current);
+            newMsgs.forEach(m => {
+              setTranscript(prev => [...prev, { speaker: 'customer', text: m.text, time: m.time }]);
+              updateAiAdvice(m.text);
+              callingService.speakAiResponse(m.text);
+            });
+            lastCustCount.current = custMsgs.length;
+          }
+        }
+      } catch (err) {}
+    }, 1200);
+
+    return () => clearInterval(syncInterval);
+  }, [targetPhone]);
 
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60);
@@ -521,6 +559,27 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <a
+              href="/phone"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                background: '#092118',
+                color: '#5dcaa5',
+                border: '1px solid #1f503f',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Open Mobile Phone Handset Receiver"
+            >
+              <span>📱 Handset (/phone)</span>
+            </a>
             <button
               onClick={handleDispatchPstnCall}
               style={{

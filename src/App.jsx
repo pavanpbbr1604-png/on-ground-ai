@@ -13,7 +13,19 @@ import AvaniDrawer from './components/avani/AvaniDrawer';
 import { LEADS_DATA } from './data/leadsData';
 import { RECENT_CALLS } from './data/callsData';
 
+import CustomerPhoneHandset from './components/phone/CustomerPhoneHandset';
+
 export default function App() {
+  const isPhoneMode = typeof window !== 'undefined' && (
+    window.location.pathname.includes('/phone') ||
+    window.location.search.includes('phone') ||
+    window.location.hash.includes('phone')
+  );
+
+  if (isPhoneMode) {
+    return <CustomerPhoneHandset />;
+  }
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
 
