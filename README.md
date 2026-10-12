@@ -43,11 +43,21 @@ npm run preview
 
 Beyond the static mock layout, this implementation introduces fully interactive, production-grade features:
 
-### 1. 📞 Live In-Call Dialer Cockpit with Web Audio Synthesizer
-* **Synthesized Telecom Ringback**: Generates authentic dual-frequency ringback tones (440Hz + 480Hz) and a pleasant major-third connection chime using the native **Web Audio API**—zero external `.mp3` dependencies or network buffering.
-* **Live Streaming Transcript**: Simulates a live two-way customer dialogue stepping forward in real time.
-* **Auto-Ticking SOP Checklist**: Automatically detects key conversation milestones (Greeting, Need Discovery, Floor Pitch, Objection Handling) and checks them off live during the call.
-* **AI Call Wrap-Up**: Auto-drafts an interaction summary upon call completion with outcome tagging (*Interested*, *Requested callback*, *Follow-up*).
+## 📞 Working Calling Engine (Web-to-Phone PSTN & AI Voice)
+
+The application features a production-ready, dual-engine calling system with **real audio, live microphone processing, and telecom carrier integration**:
+
+### 1. 👤 Human-to-Human Web-to-Phone Calling (PSTN Carrier Gateway)
+* **Real Microphone Capture**: Accesses the agent's real hardware microphone stream via `navigator.mediaDevices.getUserMedia()`.
+* **Live Voice VU-Meter Equalizer**: Computes real-time voice volume using Web Audio `AnalyserNode` frequency data, visualizing the speaker's actual voice levels in real time.
+* **Web-to-Phone-Number Calling**: Connects through the serverless backend (`/api/call`) to route outbound PSTN calls directly to actual mobile phone numbers (E.164 formatted, e.g., `+91...`).
+* **Hardware DTMF Keypad**: Features a numeric dialpad generating dual-frequency DTMF audio tones (697Hz–1477Hz) for IVR extension navigation.
+* **Mute & Audio Stream Controls**: Full mic toggle and live duration tracking.
+
+### 2. 🤖 AI-to-Human Voice Agent Calling (Avani AI)
+* **Real-Time Speech-to-Text**: Listens to the agent's live voice in real time using the native Speech Recognition engine and appends transcribed dialogue live to the transcript stream.
+* **Conversational Voice Synthesis**: Avani dynamically responds in spoken voice using Speech Synthesis with natural call centre prosody.
+* **Outbound AI Dispatch**: Dispatches an autonomous AI voice phone call to ring any real mobile phone number with the target customer context (mattress product, back pain history, zero-cost EMI offers).
 
 ### 2. 🧠 "Ask Avani AI" Sales Pitch Coaching Drawer
 * **Persistent Drawer Trigger**: Accessible globally from the header via the purple **"Ask Avani"** button.
