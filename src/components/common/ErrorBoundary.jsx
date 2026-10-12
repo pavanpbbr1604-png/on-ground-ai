@@ -59,9 +59,25 @@ export default class ErrorBoundary extends React.Component {
             <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
               Shift Session Interrupted
             </h2>
-            <p style={{ fontSize: '13px', color: '#9e9e9e', lineHeight: 1.5, marginBottom: '20px' }}>
+            <p style={{ fontSize: '13px', color: '#9e9e9e', lineHeight: 1.5, marginBottom: '16px' }}>
               The application encountered an unexpected UI state. Your shift data and calling logs are preserved in your workspace.
             </p>
+            {this.state.error && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                color: '#f87171',
+                fontSize: '12px',
+                textAlign: 'left',
+                marginBottom: '20px',
+                fontFamily: 'monospace',
+                wordBreak: 'break-all'
+              }}>
+                {this.state.error.message || this.state.error.toString()}
+              </div>
+            )}
 
             <button
               onClick={this.handleReload}

@@ -54,6 +54,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   const [wrapupSummary, setWrapupSummary] = useState('');
 
   const chatScrollContainerRef = useRef(null);
+  const transcriptEndRef = useRef(null);
 
   // Update AI Advice card based on spoken keywords
   const updateAiAdvice = (text) => {
@@ -220,7 +221,10 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   // 3. Bulletproof Auto-scroll to bottom of chat container
   useEffect(() => {
     if (chatScrollContainerRef.current) {
-      chatScrollContainerRef.current.scrollTop = chatScrollContainerRef.current.scrollHeight;
+      chatScrollContainerRef.current.scrollTo({
+        top: chatScrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [transcript, interimText, isAiReplying]);
 
@@ -861,7 +865,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
 
                 <button
                   type="button"
-                  onClick={() => handleUseAdvice(activeAdvice.sayText)}
+                  onClick={() => handleUseAdvice(activeAdvice?.sayText || '')}
                   style={{
                     marginTop: '8px',
                     width: '100%',
@@ -882,7 +886,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                   title="Click to automatically speak and insert this recommendation"
                 >
                   <Send size={12} />
-                  <span>Say This: "{activeAdvice.sayText.slice(0, 48)}..."</span>
+                  <span>Say This: "{activeAdvice?.sayText ? activeAdvice.sayText.slice(0, 48) : ''}..."</span>
                 </button>
               </div>
 
@@ -922,7 +926,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
               <div style={{ padding: '8px 14px', background: '#eefaf5', borderBottom: '1px solid #cce8de', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Zap size={15} color="#0f6e56" style={{ flexShrink: 0 }} />
                 <div style={{ fontSize: '11.5px', color: '#134e4a', lineHeight: 1.35 }}>
-                  <b>+23.6pp Rule:</b> Address customer directly as <b>"{customerName?.split(' ')[0] || 'the shopper'}"</b> to build rapport.
+                  <b>+23.6pp Rule:</b> Address customer directly as <b>"{(typeof customerName === 'string' ? customerName : 'Customer').split(' ')[0]}"</b> to build rapport.
                 </div>
               </div>
 
