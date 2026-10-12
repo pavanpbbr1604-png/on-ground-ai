@@ -109,7 +109,17 @@ class CallingService {
       };
 
       this.recognition.onerror = (event) => {
+        console.warn('Speech recognition notice:', event.error);
         if (onErrorCallback) onErrorCallback(event.error);
+      };
+
+      this.recognition.onend = () => {
+        // Auto-restart to keep listening continuously without dying on speech pause
+        if (this.isListening) {
+          try {
+            this.recognition.start();
+          } catch (e) {}
+        }
       };
 
       this.recognition.start();
@@ -211,13 +221,12 @@ class CallingService {
       });
 
       if (!response.ok) {
-        // Fallback or demo response if serverless route not yet deployed with custom keys
         const data = await response.json().catch(() => ({}));
         return {
-          success: true,
-          callId: `call_${Date.now()}`,
-          status: 'queued',
-          message: data.message || `Outbound telephony session initiated to ${phoneNumber}`
+          success: false,
+          error: data.error || data.message || 'Carrier dispatch error',
+          errors: data.errors || [{ error: data.error || 'CARRIER_ERROR', message: data.message || data.error }],
+          ...data
         };
       }
 
