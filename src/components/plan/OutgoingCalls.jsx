@@ -1,11 +1,53 @@
 import React, { useState } from 'react';
-import { Phone, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, Sparkles, ShoppingBag, Search } from 'lucide-react';
+import { Phone, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CreditCard, Sparkles, ShoppingBag, Search, UserPlus, X } from 'lucide-react';
 
-export default function OutgoingCalls({ leads = [], onPlaceCall }) {
+export default function OutgoingCalls({ leads = [], onPlaceCall, onAddNewLead }) {
   const [expandedId, setExpandedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
+
+  // Add Contact Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactLocation, setContactLocation] = useState('Bangalore');
+  const [contactProduct, setContactProduct] = useState('Ortho GRID Pro (₹42,000)');
+
+  const handleCreateContact = (e) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactPhone.trim()) return;
+
+    const newLead = {
+      id: `custom-${Date.now()}`,
+      name: contactName.trim(),
+      phone: contactPhone.trim(),
+      city: contactLocation.trim(),
+      product: contactProduct.trim(),
+      attractivenessScore: 99,
+      avatarBg: '#dcfce7',
+      avatarColor: '#15803d',
+      initials: contactName.trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+      interest: `Custom contact registered for live calling verification`,
+      status: 'Direct Test Lead',
+      journey: [
+        { date: 'Today', text: `Lead added by agent for live phone verification.` }
+      ],
+      signals: [
+        { type: 'TARGET', text: `Direct phone number: ${contactPhone.trim()}` }
+      ],
+      crossSell: 'Luxe Pillows Pair',
+      emi: '6-Month Zero-Cost EMI (₹7,000/mo)'
+    };
+
+    if (onAddNewLead) {
+      onAddNewLead(newLead);
+    }
+    setExpandedId(newLead.id);
+    setShowAddModal(false);
+    setContactName('');
+    setContactPhone('');
+  };
 
   // Filter and sort by attractivenessScore descending
   const filteredLeads = leads.filter(l => 
@@ -38,9 +80,31 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
           </div>
         </div>
 
-        {/* Search Bar + Pager */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: '200px' }}>
+        {/* Action Controls: Add Contact + Search Bar + Pager */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Add Contact Button */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              background: '#0f6e56',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontSize: '12.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <UserPlus size={14} />
+            <span>+ Add Contact / Friend</span>
+          </button>
+
+          {/* Search Box */}
+          <div style={{ position: 'relative', width: '180px' }}>
             <Search size={14} color="#8e8e93" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
@@ -271,6 +335,95 @@ export default function OutgoingCalls({ leads = [], onPlaceCall }) {
         })
       )}
       </div>
+
+      {/* Add Contact Modal Popup */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '440px', borderRadius: '16px', overflow: 'hidden', padding: '0' }}
+          >
+            <div style={{ padding: '14px 18px', background: '#0f6e56', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 800 }}>
+                <UserPlus size={16} />
+                <span>Add Contact / Friend For Live Calling</span>
+              </div>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateContact} style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  Contact Name (You or Friend) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Pavan B R or Rahul"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  Mobile Phone Number (E.164 Format) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="+919876543210"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
+                />
+                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'block' }}>
+                  Include country code (e.g. +91 for India or +1 for US)
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  Mattress Model / Product Interest
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ortho GRID Pro (₹42,000)"
+                  value={contactProduct}
+                  onChange={(e) => setContactProduct(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  City / Retail Outlet
+                </label>
+                <input
+                  type="text"
+                  placeholder="Koramangala, Bangalore"
+                  value={contactLocation}
+                  onChange={(e) => setContactLocation(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setShowAddModal(false)} className="btn-secondary" style={{ padding: '8px 14px' }}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" style={{ padding: '8px 16px' }}>
+                  Save & Add to Queue
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

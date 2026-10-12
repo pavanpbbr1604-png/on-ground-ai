@@ -48,6 +48,10 @@ export default function App() {
     }
   };
 
+  const handleAddNewLead = (newLead) => {
+    setLeads(prev => [newLead, ...prev]);
+  };
+
   return (
     <div className="app-container">
       {/* 1. App Shell Sidebar */}
@@ -87,6 +91,7 @@ export default function App() {
               onPlaceCall={handleStartCall}
               onSelectCallForReview={(call) => setSelectedCallForReview(call)}
               onStartPracticeCall={() => handleStartCall(leads[0])}
+              onAddNewLead={handleAddNewLead}
             />
           )}
 

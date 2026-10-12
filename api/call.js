@@ -21,7 +21,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Phone number is required in E.164 format (e.g., +919876543210)' });
   }
 
-  const effectiveBlandKey = apiKey || process.env.BLAND_API_KEY;
+  const DEFAULT_BLAND_KEY = 'org_e8071833b8e2ddf669c4118ba7979becf34952801063e6b4c286551868aecb67df14052eaad805850cf369';
+  const effectiveBlandKey = apiKey || process.env.BLAND_API_KEY || DEFAULT_BLAND_KEY;
   const effectiveVapiKey = apiKey || process.env.VAPI_API_KEY;
   const twilioSid = process.env.TWILIO_ACCOUNT_SID;
   const twilioToken = process.env.TWILIO_AUTH_TOKEN;
@@ -44,12 +45,20 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        return res.status(response.status).json({
+          success: false,
+          error: data.message || data.error || 'Bland AI dispatch failed',
+          ...data
+        });
+      }
       return res.status(200).json({
         success: true,
         provider: 'Bland AI',
         callId: data.call_id || data.id,
         status: 'ringing',
-        message: `Real AI call placed to ${phoneNumber}`
+        message: `Real AI call placed to ${phoneNumber}`,
+        ...data
       });
     } catch (err) {
       console.error('Bland AI dispatch error:', err);
