@@ -31,17 +31,15 @@ export default async function handler(req, res) {
 
     const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="2" timeout="8" bargeIn="true" speechModel="phone_call" language="en-IN">
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
     <Say voice="Polly.Aditi" language="en-IN">
       ${greetingText}
     </Say>
-    <Pause length="1"/>
   </Gather>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="2" timeout="8" bargeIn="true" language="en-IN">
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" language="en-IN">
     <Say voice="Polly.Aditi" language="en-IN">
       I am listening Pavan. Please tell us what you are looking for in your mattress.
     </Say>
-    <Pause length="1"/>
   </Gather>
 </Response>`;
 
@@ -105,11 +103,10 @@ export default async function handler(req, res) {
 
     const replyXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="2" timeout="8" bargeIn="true" speechModel="phone_call" language="en-IN">
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
     <Say voice="Polly.Aditi" language="en-IN">
       ${replyText}
     </Say>
-    <Pause length="1"/>
   </Gather>
   <Say voice="Polly.Aditi" language="en-IN">
     Thank you for speaking with The Sleep Company, Pavan. Have a wonderful day!
