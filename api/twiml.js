@@ -1,8 +1,21 @@
 // Vercel Serverless Function: Intelligent Sales Closer IVR & Telephony Engine
-// Features: Multi-turn objection handling, deal closing, graceful exit, zero loops, robust body parsing
+// Features: Multi-turn objection handling, deal closing, graceful exit, zero loops, robust body parsing, real-time sync via ntfy.sh
 
 if (!global.callSessions) {
   global.callSessions = {};
+}
+
+// Broadcast message event directly to the agent cockpit via high-speed global event stream
+async function broadcastMessage(phone, payload) {
+  try {
+    await fetch(`https://ntfy.sh/og_call_${phone}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error('Broadcast error:', err);
+  }
 }
 
 // Helper: Parse URL-encoded or JSON body across Node.js / Vercel runtimes
@@ -77,13 +90,17 @@ export default async function handler(req, res) {
     session.turnCount = 1;
     session.fallbackCount = 0;
     const greetingText = 'Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about spine support. Are you looking to upgrade your mattress for back pain relief?';
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    session.agentMessages.push({
+    const agentMsg = {
       speaker: 'staff',
       text: greetingText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: nowTime,
       id: `tw-agent-${Date.now()}`
-    });
+    };
+
+    session.agentMessages.push(agentMsg);
+    await broadcastMessage(cleanPhone, agentMsg);
 
     const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -117,13 +134,17 @@ export default async function handler(req, res) {
       ''
     ).trim();
 
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     if (userSpoken) {
-      session.customerMessages.push({
+      const custMsg = {
         speaker: 'customer',
         text: userSpoken,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: nowTime,
         id: `tw-cust-${Date.now()}`
-      });
+      };
+      session.customerMessages.push(custMsg);
+      await broadcastMessage(cleanPhone, custMsg);
     }
 
     const lower = (userSpoken || '').toLowerCase();
@@ -183,13 +204,16 @@ export default async function handler(req, res) {
       }
     }
 
-    // Log the agent reply to the session for laptop cockpit sync
-    session.agentMessages.push({
+    const agentMsg = {
       speaker: 'staff',
       text: replyText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      id: `tw-agent-${Date.now()}`
-    });
+      time: nowTime,
+      id: `tw-agent-${Date.now()}`,
+      hangup: shouldHangup
+    };
+
+    session.agentMessages.push(agentMsg);
+    await broadcastMessage(cleanPhone, agentMsg);
 
     if (shouldHangup) {
       session.status = 'ended';

@@ -202,8 +202,24 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
   };
 
   // 1. Initial Call Connect & Ringtones
+  const callStartTimeRef = useRef(Date.now() - 3000);
   useEffect(() => {
     soundFX.playRingTone();
+    callStartTimeRef.current = Date.now() - 3000;
+
+    // Immediately display the initial opening greeting so chat starts instantly
+    const greetingText = `Hello ${customerName}! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about spine support. Are you looking to upgrade your mattress for back pain relief?`;
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    setTranscript([{
+      speaker: 'staff',
+      text: greetingText,
+      time: nowTime,
+      id: `tw-greet-${Date.now()}`
+    }]);
+    updateAiAdvice(greetingText);
+    checkSopCompliance(greetingText);
+
     const connectTimer = setTimeout(() => {
       soundFX.playConnectChime();
       setCallStatus('connected');
@@ -305,53 +321,74 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     });
   };
 
-  // 5. Sync customer messages and agent speech from live phone call session (/api/signal)
-  const lastCustCount = useRef(0);
-  const lastAgentCount = useRef(0);
+  // 5. Zero-Latency Real-Time SSE & Polling Live Chat Stream
   useEffect(() => {
     const cleanPhone = (targetPhone || '9480850001').replace(/[^0-9]/g, '').slice(-10);
-    const syncInterval = setInterval(async () => {
+    const ntfyTopic = `og_call_${cleanPhone}`;
+
+    const processIncomingMessage = (msg) => {
+      if (!msg || !msg.text) return;
+      const cleanText = msg.text.trim();
+      setTranscript(prev => {
+        if (prev.some(t => t.text.trim() === cleanText)) return prev;
+        return [...prev, {
+          speaker: msg.speaker || 'staff',
+          text: cleanText,
+          time: msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          id: msg.id || `msg-${Date.now()}`
+        }];
+      });
+      updateAiAdvice(cleanText);
+      checkSopCompliance(cleanText);
+
+      if (msg.hangup) {
+        setPstnNotice({
+          type: 'success',
+          text: '✓ Deal Closed & Call Completed: WhatsApp Confirmation Dispatched'
+        });
+      }
+    };
+
+    // A. Connect Live Server-Sent Events (SSE) Stream (Instant 0ms update)
+    let eventSource = null;
+    try {
+      eventSource = new EventSource(`https://ntfy.sh/${ntfyTopic}/sse`);
+      eventSource.onmessage = (event) => {
+        try {
+          const envelope = JSON.parse(event.data);
+          if (envelope.event === 'message' && envelope.message) {
+            const parsed = JSON.parse(envelope.message);
+            processIncomingMessage(parsed);
+          }
+        } catch (err) {}
+      };
+    } catch (e) {}
+
+    // B. Fallback Poller (polls every 750ms in case SSE network reconnects)
+    const pollInterval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/signal?phone=${cleanPhone}`);
-        const data = await res.json();
-        if (data.success && data.session) {
-          // Sync Customer speech from physical phone
-          const custMsgs = data.session.customerMessages || [];
-          if (custMsgs.length > lastCustCount.current) {
-            const newMsgs = custMsgs.slice(lastCustCount.current);
-            newMsgs.forEach(m => {
-              setTranscript(prev => [...prev, { speaker: 'customer', text: m.text, time: m.time }]);
-              updateAiAdvice(m.text);
-              checkSopCompliance(m.text);
-            });
-            lastCustCount.current = custMsgs.length;
-          }
-
-          // Sync IVR Agent prompts spoken to caller
-          const agentMsgs = data.session.agentMessages || [];
-          if (agentMsgs.length > lastAgentCount.current) {
-            const newAgentMsgs = agentMsgs.slice(lastAgentCount.current);
-            newAgentMsgs.forEach(m => {
-              setTranscript(prev => {
-                if (prev.some(t => t.text === m.text)) return prev;
-                return [...prev, { speaker: 'staff', text: m.text, time: m.time }];
-              });
-              updateAiAdvice(m.text);
-              checkSopCompliance(m.text);
-            });
-            lastAgentCount.current = agentMsgs.length;
-          }
-
-          // If call has ended on carrier side
-          if (data.session.status === 'ended' && callStatus === 'pstn-active') {
-            setCallStatus('connected');
-          }
+        const res = await fetch(`https://ntfy.sh/${ntfyTopic}/json?poll=1`);
+        if (res.ok) {
+          const raw = await res.text();
+          const lines = raw.trim().split('\n');
+          lines.forEach(line => {
+            try {
+              const item = JSON.parse(line);
+              if (item.event === 'message' && item.message) {
+                const parsed = JSON.parse(item.message);
+                processIncomingMessage(parsed);
+              }
+            } catch (err) {}
+          });
         }
       } catch (err) {}
-    }, 600);
+    }, 750);
 
-    return () => clearInterval(syncInterval);
-  }, [targetPhone, callStatus]);
+    return () => {
+      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+    };
+  }, [targetPhone]);
 
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60);
