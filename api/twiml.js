@@ -1,20 +1,25 @@
 // Vercel Serverless Function: Intelligent Sales Closer IVR & Telephony Engine
-// Features: Multi-turn objection handling, deal closing, graceful exit, zero loops, robust body parsing, real-time sync via ntfy.sh
+// Features: Multi-turn objection handling, deal closing, graceful exit, zero loops, robust body parsing, bulletproof cloud sync
 
-if (!global.callSessions) {
-  global.callSessions = {};
-}
+const CLOUD_SESSION_ID = 'ff808181a09d98f701a134e2eff85385';
 
-// Broadcast message event directly to the agent cockpit via high-speed global event stream
-async function broadcastMessage(phone, payload) {
+// Synchronize messages directly to cloud store for instantaneous cockpit display
+async function syncToCloudStore(messages, hangup = false) {
   try {
-    await fetch(`https://ntfy.sh/og_call_${phone}`, {
-      method: 'POST',
+    await fetch(`https://api.restful-api.dev/objects/${CLOUD_SESSION_ID}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        name: 'call_9480850001',
+        data: {
+          messages: messages,
+          hangup: hangup,
+          updatedAt: Date.now()
+        }
+      })
     });
   } catch (err) {
-    console.error('Broadcast error:', err);
+    console.error('Cloud store sync error:', err);
   }
 }
 
@@ -68,27 +73,8 @@ export default async function handler(req, res) {
   const { step, phone = '9480850001' } = { ...(req.query || {}), ...parsedBody };
   const cleanPhone = String(phone).replace(/[^0-9]/g, '').slice(-10);
 
-  if (!global.callSessions[cleanPhone]) {
-    global.callSessions[cleanPhone] = {
-      phone: cleanPhone,
-      status: 'connected',
-      turnCount: 0,
-      fallbackCount: 0,
-      agentMessages: [],
-      customerMessages: [],
-      updatedAt: Date.now()
-    };
-  }
-
-  const session = global.callSessions[cleanPhone];
-  session.status = 'connected';
-  if (typeof session.turnCount !== 'number') session.turnCount = 0;
-  if (typeof session.fallbackCount !== 'number') session.fallbackCount = 0;
-
   // 1. Initial Greeting (Opening & Needs Discovery)
   if (!step || step === 'greet') {
-    session.turnCount = 1;
-    session.fallbackCount = 0;
     const greetingText = 'Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about spine support. Are you looking to upgrade your mattress for back pain relief?';
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -99,8 +85,7 @@ export default async function handler(req, res) {
       id: `tw-agent-${Date.now()}`
     };
 
-    session.agentMessages.push(agentMsg);
-    await broadcastMessage(cleanPhone, agentMsg);
+    await syncToCloudStore([agentMsg], false);
 
     const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -125,7 +110,6 @@ export default async function handler(req, res) {
 
   // 2. Multi-turn Real-time Dialogue & Deal Closing Engine
   if (step === 'reply') {
-    session.turnCount += 1;
     const userSpoken = (
       parsedBody.SpeechResult || 
       req.query?.SpeechResult || 
@@ -136,6 +120,16 @@ export default async function handler(req, res) {
 
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    // Fetch existing conversation messages from cloud store
+    let currentMessages = [];
+    try {
+      const getRes = await fetch(`https://api.restful-api.dev/objects/${CLOUD_SESSION_ID}`);
+      const json = await getRes.json();
+      currentMessages = json?.data?.messages || [];
+    } catch (e) {
+      currentMessages = [];
+    }
+
     if (userSpoken) {
       const custMsg = {
         speaker: 'customer',
@@ -143,8 +137,7 @@ export default async function handler(req, res) {
         time: nowTime,
         id: `tw-cust-${Date.now()}`
       };
-      session.customerMessages.push(custMsg);
-      await broadcastMessage(cleanPhone, custMsg);
+      currentMessages.push(custMsg);
     }
 
     const lower = (userSpoken || '').toLowerCase();
@@ -153,7 +146,8 @@ export default async function handler(req, res) {
 
     // A. Customer says NO / Not Interested / Cancel / Pass
     if (lower.includes('no') || lower.includes('not interested') || lower.includes("don't want") || lower.includes('dont want') || lower.includes('cancel') || lower.includes('stop') || lower.includes('bye') || lower.includes('quit') || lower.includes('pass')) {
-      if (session.turnCount <= 2 && !lower.includes('bye') && !lower.includes('stop') && !lower.includes('cancel')) {
+      const hasPreviousNo = currentMessages.filter(m => m.speaker === 'customer' && (m.text.toLowerCase().includes('no') || m.text.toLowerCase().includes('not'))).length > 1;
+      if (!hasPreviousNo && !lower.includes('bye') && !lower.includes('stop') && !lower.includes('cancel')) {
         // First gentle objection counter with extra offer
         replyText = 'I completely understand Pavan. Before you decide, we have a special store anniversary offer giving an extra ₹2,000 accessory voucher and a 100-night trial with 100% money-back guarantee. Would you like to check it out on WhatsApp, or would you prefer to pass?';
       } else {
@@ -191,12 +185,12 @@ export default async function handler(req, res) {
     else if (lower.includes('detail') || lower.includes('feature') || lower.includes('spec') || lower.includes('tell me') || lower.includes('offer') || lower.includes('voucher')) {
       replyText = 'Our Ortho GRID Pro features patented Japanese SmartGRID with 2,500 open air ventilation channels and doctor-recommended 8.5 firmness. Plus, we are offering an exclusive ₹2,000 store anniversary voucher and ₹7,000 per month zero-cost EMI. Would you like me to send the complete details to your WhatsApp?';
     }
-    // H. Dynamic Fallback (Never repeats in a loop)
+    // H. Dynamic Fallback
     else {
-      session.fallbackCount += 1;
-      if (session.fallbackCount === 1) {
+      const fallbackCount = currentMessages.filter(m => m.speaker === 'staff').length;
+      if (fallbackCount <= 2) {
         replyText = 'Our Ortho GRID Pro is engineered with 2,500 air channels and doctor-recommended 8.5 spine firmness. We also offer 6-month zero-cost EMI at ₹7,000 a month. Would you like me to book your order or send the details to WhatsApp?';
-      } else if (session.fallbackCount === 2) {
+      } else if (fallbackCount === 3) {
         replyText = 'Pavan, would you like to take advantage of our 100-night in-home trial, or should I send the full price breakdown to your WhatsApp?';
       } else {
         replyText = 'Thank you for your time today Pavan. Feel free to visit our Koramangala store whenever you are ready. Have a wonderful day!';
@@ -208,15 +202,13 @@ export default async function handler(req, res) {
       speaker: 'staff',
       text: replyText,
       time: nowTime,
-      id: `tw-agent-${Date.now()}`,
-      hangup: shouldHangup
+      id: `tw-agent-${Date.now()}`
     };
+    currentMessages.push(agentMsg);
 
-    session.agentMessages.push(agentMsg);
-    await broadcastMessage(cleanPhone, agentMsg);
+    await syncToCloudStore(currentMessages, shouldHangup);
 
     if (shouldHangup) {
-      session.status = 'ended';
       const closeXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Aditi" language="en-IN">

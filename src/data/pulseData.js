@@ -113,6 +113,20 @@ export const PULSE_CHANNELS = [
 
 export const PULSE_CUSTOMER_CHATS = [
   {
+    id: 'cust-0',
+    name: 'Pavan B R',
+    initials: 'PB',
+    phone: '+91 94808 50001',
+    avatarBg: '#0f6e56',
+    status: 'Verified Caller · Phone Lead Score 99',
+    messages: [
+      { id: 'cp-1', sender: 'system', isSystem: true, text: 'Live Web-to-Phone carrier connected with +91 94808 50001', time: 'Just now' },
+      { id: 'cp-2', sender: 'staff', text: 'Hello Pavan! Avani calling from The Sleep Company, Koramangala store regarding your Ortho GRID mattress inquiry.', time: 'Just now' },
+      { id: 'cp-3', sender: 'customer', text: 'Yes, looking for spine support and ₹7,000 monthly zero-cost EMI.', time: 'Just now' },
+      { id: 'cp-4', sender: 'staff', text: 'Official 6M zero-cost EMI quote and catalogue dispatched to your WhatsApp!', time: 'Just now' }
+    ]
+  },
+  {
     id: 'cust-1',
     name: 'Mukunda R.',
     initials: 'MK',

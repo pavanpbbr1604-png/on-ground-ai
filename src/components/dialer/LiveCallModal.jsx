@@ -220,6 +220,25 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     updateAiAdvice(greetingText);
     checkSopCompliance(greetingText);
 
+    // Reset cloud store for this fresh call session
+    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a134e2eff85385', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'call_9480850001',
+        data: {
+          messages: [{
+            speaker: 'staff',
+            text: greetingText,
+            time: nowTime,
+            id: `tw-greet-${Date.now()}`
+          }],
+          hangup: false,
+          updatedAt: Date.now()
+        }
+      })
+    }).catch(() => {});
+
     const connectTimer = setTimeout(() => {
       soundFX.playConnectChime();
       setCallStatus('connected');
@@ -321,73 +340,35 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
     });
   };
 
-  // 5. Zero-Latency Real-Time SSE & Polling Live Chat Stream
+  // 5. High-Speed Cloud Sync Live Chat Stream
   useEffect(() => {
-    const cleanPhone = (targetPhone || '9480850001').replace(/[^0-9]/g, '').slice(-10);
-    const ntfyTopic = `og_call_${cleanPhone}`;
+    const CLOUD_SESSION_ID = 'ff808181a09d98f701a134e2eff85385';
 
-    const processIncomingMessage = (msg) => {
-      if (!msg || !msg.text) return;
-      const cleanText = msg.text.trim();
-      setTranscript(prev => {
-        if (prev.some(t => t.text.trim() === cleanText)) return prev;
-        return [...prev, {
-          speaker: msg.speaker || 'staff',
-          text: cleanText,
-          time: msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          id: msg.id || `msg-${Date.now()}`
-        }];
-      });
-      updateAiAdvice(cleanText);
-      checkSopCompliance(cleanText);
-
-      if (msg.hangup) {
-        setPstnNotice({
-          type: 'success',
-          text: '✓ Deal Closed & Call Completed: WhatsApp Confirmation Dispatched'
-        });
-      }
-    };
-
-    // A. Connect Live Server-Sent Events (SSE) Stream (Instant 0ms update)
-    let eventSource = null;
-    try {
-      eventSource = new EventSource(`https://ntfy.sh/${ntfyTopic}/sse`);
-      eventSource.onmessage = (event) => {
-        try {
-          const envelope = JSON.parse(event.data);
-          if (envelope.event === 'message' && envelope.message) {
-            const parsed = JSON.parse(envelope.message);
-            processIncomingMessage(parsed);
-          }
-        } catch (err) {}
-      };
-    } catch (e) {}
-
-    // B. Fallback Poller (polls every 750ms in case SSE network reconnects)
-    const pollInterval = setInterval(async () => {
+    const syncInterval = setInterval(async () => {
       try {
-        const res = await fetch(`https://ntfy.sh/${ntfyTopic}/json?poll=1`);
+        const res = await fetch(`https://api.restful-api.dev/objects/${CLOUD_SESSION_ID}`);
         if (res.ok) {
-          const raw = await res.text();
-          const lines = raw.trim().split('\n');
-          lines.forEach(line => {
-            try {
-              const item = JSON.parse(line);
-              if (item.event === 'message' && item.message) {
-                const parsed = JSON.parse(item.message);
-                processIncomingMessage(parsed);
-              }
-            } catch (err) {}
-          });
+          const json = await res.json();
+          const msgs = json?.data?.messages;
+          if (Array.isArray(msgs) && msgs.length > 0) {
+            setTranscript(msgs);
+            const latest = msgs[msgs.length - 1];
+            if (latest && latest.text) {
+              updateAiAdvice(latest.text);
+              checkSopCompliance(latest.text);
+            }
+            if (json?.data?.hangup) {
+              setPstnNotice({
+                type: 'success',
+                text: '✓ Deal Closed & Call Completed: WhatsApp Confirmation Dispatched'
+              });
+            }
+          }
         }
       } catch (err) {}
-    }, 750);
+    }, 500);
 
-    return () => {
-      if (eventSource) eventSource.close();
-      clearInterval(pollInterval);
-    };
+    return () => clearInterval(syncInterval);
   }, [targetPhone]);
 
   const formatTime = (secs) => {
