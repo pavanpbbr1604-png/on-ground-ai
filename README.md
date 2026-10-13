@@ -7,9 +7,8 @@
 [![Telephony](https://img.shields.io/badge/Telephony-Genuine_Carrier_Calling-success)](#)
 [![Code](https://img.shields.io/badge/Codebase-100%25_Original_Semantic_JSX-blue)](#)
 
-> **Candidate Submission:** Pavan B. R. (`pavanpbbr.1604@gmail.com` · `+91 9480850001`)  
-> **Role:** Forward Deployed Engineer / Agentic Engineer @ On-Ground.ai  
-> **Evaluators:** Mukunda Dwarkanath & Rashmi Sehgal (Founders, On-Ground.ai)  
+> **Author:** Pavan B. R. (`pavanpbbr.1604@gmail.com`)  
+> **Institution:** CMR Institute of Technology (CMRIT), Bengaluru  
 > **Live Production App:** [https://on-groundai.vercel.app](https://on-groundai.vercel.app)  
 > **GitHub Repository:** [https://github.com/pavanpbbr1604-png/on-ground-ai](https://github.com/pavanpbbr1604-png/on-ground-ai)  
 > **Video Demonstration (Google Drive):** [Watch Telephony Demo](https://drive.google.com/drive/folders/1PvhapPjdnyA2IHSZywGhB51ULNC37TSk?usp=drive_link)
@@ -41,8 +40,7 @@ Unlike a static prototype or simulated screen mockup, this project implements a 
                                                       ▼
                                        ┌──────────────────────────────┐
                                        │   Physical Mobile Phone      │
-                                       │       +91 9480850001         │
-                                       │    (Customer on Handset)     │
+                                       │    (Customer Handset)        │
                                        └──────────────────────────────┘
 ```
 
@@ -51,7 +49,7 @@ Unlike a static prototype or simulated screen mockup, this project implements a 
 ## 🚀 Key Achievements & Exceeded Criteria
 
 ### 1. 📞 Genuine Web-to-Phone Carrier Calling (No Mocks, Zero Simulations)
-- **Real PSTN Telephony Gateway (`api/call.js`)**: Outbound dialing via carrier telecom infrastructure directly to physical mobile phone numbers (`+919480850001`). When the call button is clicked, the customer's physical phone rings immediately.
+- **Real PSTN Telephony Gateway (`api/call.js`)**: Outbound dialing via carrier telecom infrastructure directly to physical mobile phone numbers (E.164 carrier routing). When the call button is clicked, the customer's physical phone rings immediately.
 - **Dual Calling Modalities**:
   - 🤖 **Avani AI Voice Closer (AI-to-Human)**: An autonomous voice closer running on Twilio carrier voice using natural Indian English prosody (`Polly.Aditi`). Avani introduces herself by store location, discovers customer needs, handles objections, and closes orders.
   - 👤 **Human Web-to-Phone (Agent-to-Customer)**: Full hardware microphone capture (`navigator.mediaDevices.getUserMedia`) with a real-time Web Audio API VU equalizer meter.
@@ -199,7 +197,7 @@ npm run preview
 ## 🧪 Testing the Live Telephony Call (Step-by-Step)
 
 1. Open the live deployment: **[https://on-groundai.vercel.app](https://on-groundai.vercel.app)**
-2. On **Plan ➔ Outgoing Calls**, locate **Pavan B R** (`+919480850001`) ranked as Lead #1.
+2. On **Plan ➔ Outgoing Calls**, locate **Pavan B R** ranked as Lead #1.
 3. Click **"Ring Target Phone Now"** (or the phone icon).
 4. **On Your Laptop Screen**:
    - The Live Call Cockpit opens with telecom gateway status connected.
@@ -225,11 +223,9 @@ In accordance with the assignment guidelines:
 
 ---
 
-## 📬 Contact & Candidate Information
+## 📬 Contact & Information
 
 - **Candidate:** Pavan B. R.
 - **Education:** CMR Institute of Technology (CMRIT), Bengaluru
-- **Phone:** +91 9480850001
 - **Email:** pavanpbbr.1604@gmail.com
-- **LinkedIn / GitHub:** [github.com/pavanpbbr1604-png](https://github.com/pavanpbbr1604-png)
-- **Role Applied:** Forward Deployed Engineer / Agentic Engineer @ On-Ground.ai
+- **GitHub:** [github.com/pavanpbbr1604-png](https://github.com/pavanpbbr1604-png)
