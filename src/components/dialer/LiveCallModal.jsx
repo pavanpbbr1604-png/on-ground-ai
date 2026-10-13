@@ -258,6 +258,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
 
   // 5. Sync customer messages from connected mobile handset (/phone)
   const lastCustCount = useRef(0);
+  const lastAgentCount = useRef(0);
   useEffect(() => {
     const cleanPhone = (targetPhone || '9480850001').replace(/[^0-9]/g, '').slice(-10);
     const syncInterval = setInterval(async () => {
@@ -265,15 +266,28 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
         const res = await fetch(`/api/signal?phone=${cleanPhone}`);
         const data = await res.json();
         if (data.success && data.session) {
+          // Sync Customer speech from physical phone
           const custMsgs = data.session.customerMessages || [];
           if (custMsgs.length > lastCustCount.current) {
             const newMsgs = custMsgs.slice(lastCustCount.current);
             newMsgs.forEach(m => {
               setTranscript(prev => [...prev, { speaker: 'customer', text: m.text, time: m.time }]);
               updateAiAdvice(m.text);
-              callingService.speakAiResponse(m.text);
             });
             lastCustCount.current = custMsgs.length;
+          }
+
+          // Sync IVR Agent prompts spoken to caller
+          const agentMsgs = data.session.agentMessages || [];
+          if (agentMsgs.length > lastAgentCount.current) {
+            const newAgentMsgs = agentMsgs.slice(lastAgentCount.current);
+            newAgentMsgs.forEach(m => {
+              setTranscript(prev => {
+                if (prev.some(t => t.text === m.text)) return prev;
+                return [...prev, { speaker: 'staff', text: m.text, time: m.time }];
+              });
+            });
+            lastAgentCount.current = agentMsgs.length;
           }
         }
       } catch (err) {}

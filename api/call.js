@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       const params = new URLSearchParams({
         To: phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`,
         From: twilioPhone,
-        Url: 'https://demo.twilio.com/welcome/voice/'
+        Url: `https://on-groundai.vercel.app/api/twiml?phone=${encodeURIComponent(phoneNumber)}`
       });
 
       const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Calls.json`, {
