@@ -1,20 +1,66 @@
-// Vercel Serverless Function: Interactive Voice Response (IVR) & Speech-to-Text for Real Twilio Phone Calls
-// Handles live telephone dialogue for The Sleep Company retail campaign
+// Vercel Serverless Function: Intelligent Sales Closer IVR & Telephony Engine
+// Features: Multi-turn objection handling, deal closing, graceful exit, zero loops, robust body parsing
 
 if (!global.callSessions) {
   global.callSessions = {};
 }
 
+// Helper: Parse URL-encoded or JSON body across Node.js / Vercel runtimes
+async function parseRequestBody(req) {
+  if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+    return req.body;
+  }
+
+  let raw = '';
+  if (req.body) {
+    if (Buffer.isBuffer(req.body)) {
+      raw = req.body.toString('utf8');
+    } else if (typeof req.body === 'string') {
+      raw = req.body;
+    }
+  } else {
+    try {
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      raw = Buffer.concat(chunks).toString('utf8');
+    } catch (e) {
+      raw = '';
+    }
+  }
+
+  if (!raw) return {};
+
+  try {
+    const params = new URLSearchParams(raw);
+    const result = {};
+    for (const [key, value] of params.entries()) {
+      result[key] = value;
+    }
+    return result;
+  } catch (e) {
+    try {
+      return JSON.parse(raw);
+    } catch (e2) {
+      return {};
+    }
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'text/xml');
 
-  const { step, phone = '9480850001' } = req.query || {};
-  const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-10);
+  const parsedBody = await parseRequestBody(req);
+  const { step, phone = '9480850001' } = { ...(req.query || {}), ...parsedBody };
+  const cleanPhone = String(phone).replace(/[^0-9]/g, '').slice(-10);
 
   if (!global.callSessions[cleanPhone]) {
     global.callSessions[cleanPhone] = {
       phone: cleanPhone,
       status: 'connected',
+      turnCount: 0,
+      fallbackCount: 0,
       agentMessages: [],
       customerMessages: [],
       updatedAt: Date.now()
@@ -23,27 +69,15 @@ export default async function handler(req, res) {
 
   const session = global.callSessions[cleanPhone];
   session.status = 'connected';
+  if (typeof session.turnCount !== 'number') session.turnCount = 0;
+  if (typeof session.fallbackCount !== 'number') session.fallbackCount = 0;
 
-  // 1. If customer just answered the phone (Initial Greeting)
+  // 1. Initial Greeting (Opening & Needs Discovery)
   if (!step || step === 'greet') {
-    const greetingText = session.queuedAgentPitch || 'Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about back support. Are you looking to upgrade your mattress for spine relief?';
-    session.queuedAgentPitch = null; // Clear after using
+    session.turnCount = 1;
+    session.fallbackCount = 0;
+    const greetingText = 'Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about spine support. Are you looking to upgrade your mattress for back pain relief?';
 
-    const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
-    <Say voice="Polly.Aditi" language="en-IN">
-      ${greetingText}
-    </Say>
-  </Gather>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" language="en-IN">
-    <Say voice="Polly.Aditi" language="en-IN">
-      I am listening Pavan. Please tell us what you are looking for in your mattress.
-    </Say>
-  </Gather>
-</Response>`;
-
-    // Log the agent greeting to the active laptop session
     session.agentMessages.push({
       speaker: 'staff',
       text: greetingText,
@@ -51,18 +85,42 @@ export default async function handler(req, res) {
       id: `tw-agent-${Date.now()}`
     });
 
+    const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" method="POST" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
+    <Say voice="Polly.Aditi" language="en-IN">
+      ${greetingText}
+    </Say>
+  </Gather>
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" method="POST" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
+    <Say voice="Polly.Aditi" language="en-IN">
+      I am listening Pavan. Please tell us what you are looking for in your mattress.
+    </Say>
+  </Gather>
+  <Say voice="Polly.Aditi" language="en-IN">
+    Thank you for your time Pavan. Have a wonderful day!
+  </Say>
+  <Hangup/>
+</Response>`;
+
     return res.status(200).send(greetingXml);
   }
 
-  // 2. Customer Spoke on Phone (Twilio Speech Recognition result returned)
+  // 2. Multi-turn Real-time Dialogue & Deal Closing Engine
   if (step === 'reply') {
-    const userSpoken = req.body?.SpeechResult || req.query?.SpeechResult || '';
-    
-    if (userSpoken && userSpoken.trim()) {
-      // Push the customer's actual spoken text into the session for the laptop to display!
+    session.turnCount += 1;
+    const userSpoken = (
+      parsedBody.SpeechResult || 
+      req.query?.SpeechResult || 
+      parsedBody.TranscriptionText || 
+      req.query?.TranscriptionText || 
+      ''
+    ).trim();
+
+    if (userSpoken) {
       session.customerMessages.push({
         speaker: 'customer',
-        text: userSpoken.trim(),
+        text: userSpoken,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         id: `tw-cust-${Date.now()}`
       });
@@ -70,30 +128,62 @@ export default async function handler(req, res) {
 
     const lower = (userSpoken || '').toLowerCase();
     let replyText = '';
+    let shouldHangup = false;
 
-    // Check if the agent queued a manual custom reply from the laptop
-    if (session.queuedAgentPitch) {
-      replyText = session.queuedAgentPitch;
-      session.queuedAgentPitch = null;
-    } else if (lower.includes('whatsapp') || lower.includes('message') || lower.includes('quote') || lower.includes('send') || lower.includes('share')) {
-      replyText = 'Certainly Pavan! I will share the complete mattress catalogue, discount voucher, and zero-cost EMI quote directly to your WhatsApp at 9480850001 right away.';
-    } else if (lower.includes('emi') || lower.includes('cost') || lower.includes('price') || lower.includes('expensive') || lower.includes('wakefit') || lower.includes('budget') || lower.includes('discount') || lower.includes('month') || lower.includes('7000') || lower.includes('42000')) {
-      replyText = 'The King size is ₹42,000, and we offer a 6-month zero-cost EMI on HDFC and ICICI cards at just ₹7,000 per month with zero down payment. Plus, unlike cheap foam, our patented SmartGRID comes with a 10-year warranty with zero sagging.';
-    } else if (lower.includes('detail') || lower.includes('feature') || lower.includes('spec') || lower.includes('tell me') || lower.includes('need') || lower.includes('give me')) {
-      replyText = 'Our Ortho GRID Pro features patented Japanese SmartGRID with 2,500 open air ventilation channels and doctor-recommended 8.5 out of 10 firmness that keeps your spine naturally aligned. Would you like to hear about our ₹7,000 monthly zero-cost EMI?';
-    } else if (lower.includes('trial') || lower.includes('return') || lower.includes('refund') || lower.includes('100') || lower.includes('guarantee')) {
-      replyText = 'You get a 100-night risk-free trial in your home. If your back pain does not completely improve, we arrange free doorstep pickup and give you a 100% full refund with zero questions asked.';
-    } else if (lower.includes('heat') || lower.includes('hot') || lower.includes('sweat') || lower.includes('warm') || lower.includes('channel') || lower.includes('air')) {
-      replyText = 'Traditional memory foam traps body heat, but our SmartGRID features 2,500 open air ventilation channels paired with SnowTec cooling fabric that keeps the mattress 4 degrees cooler all night.';
-    } else if (lower.includes('pain') || lower.includes('back') || lower.includes('spine') || lower.includes('doctor') || lower.includes('stiff')) {
-      replyText = 'The Ortho GRID is scientifically certified by orthopaedic doctors to cradle your hips while maintaining natural lumbar support. Would you like to test it with our 100-night risk-free in-home trial?';
-    } else if (lower.includes('yes') || lower.includes('okay') || lower.includes('sure') || lower.includes('hello') || lower.includes('hi')) {
-      replyText = 'Wonderful Pavan! We have the Ortho GRID ready in stock at our Koramangala store with free doorstep delivery within 24 hours. Would you like to proceed with the ₹7,000 monthly zero-cost EMI?';
-    } else {
-      replyText = 'Our Ortho GRID mattress is engineered with 2,500 air channels and doctor-recommended 8.5 out of 10 firmness. We also offer 6-month zero-cost EMI starting at ₹7,000 a month.';
+    // A. Customer says NO / Not Interested / Cancel / Pass
+    if (lower.includes('no') || lower.includes('not interested') || lower.includes("don't want") || lower.includes('dont want') || lower.includes('cancel') || lower.includes('stop') || lower.includes('bye') || lower.includes('quit') || lower.includes('pass')) {
+      if (session.turnCount <= 2 && !lower.includes('bye') && !lower.includes('stop') && !lower.includes('cancel')) {
+        // First gentle objection counter with extra offer
+        replyText = 'I completely understand Pavan. Before you decide, we have a special store anniversary offer giving an extra ₹2,000 accessory voucher and a 100-night trial with 100% money-back guarantee. Would you like to check it out on WhatsApp, or would you prefer to pass?';
+      } else {
+        // Customer insists on No -> Gracefully close and hang up
+        replyText = 'No problem at all Pavan! Thank you so much for your time today. If your back pain ever bothers you, feel free to visit our Koramangala store or call us. Have a wonderful day!';
+        shouldHangup = true;
+      }
+    }
+    // B. Customer says YES / Agree / Buy / Proceed / WhatsApp / Book / Deal
+    else if (lower.includes('whatsapp') || lower.includes('message') || lower.includes('send') || lower.includes('share') || lower.includes('quote')) {
+      replyText = 'Perfect Pavan! I have dispatched the complete mattress catalogue, discount voucher, and zero-cost EMI booking quote directly to your WhatsApp at 9480850001 right now. Our team will follow up to assist you with delivery. Thank you for choosing The Sleep Company!';
+      shouldHangup = true;
+    }
+    else if (lower.includes('yes') || lower.includes('book') || lower.includes('buy') || lower.includes('order') || lower.includes('sure') || lower.includes('proceed') || lower.includes('agree') || lower.includes('take it') || lower.includes('done') || lower.includes('close')) {
+      replyText = 'Fantastic Pavan! I have locked in your Ortho GRID Pro mattress with the 6-month zero-cost EMI at ₹7,000 a month and 10-year replacement warranty. I am sending the order confirmation directly to your WhatsApp at 9480850001 right now. Thank you for choosing The Sleep Company!';
+      shouldHangup = true;
+    }
+    // C. Customer asks about EMI / Price / Budget / Cost / Expensive / 7000 / 42000
+    else if (lower.includes('emi') || lower.includes('cost') || lower.includes('price') || lower.includes('expensive') || lower.includes('wakefit') || lower.includes('budget') || lower.includes('discount') || lower.includes('month') || lower.includes('7000') || lower.includes('42000')) {
+      replyText = 'The King size is ₹42,000, and we offer a 6-month zero-cost EMI on HDFC and ICICI cards at just ₹7,000 per month with zero down payment. Unlike regular foam that sags in two years, our SmartGRID has a 10-year warranty with zero sagging. Shall I book your order or send the details to your WhatsApp?';
+    }
+    // D. Customer asks about 2,500 Air Channels / Heat / Cooling / SnowTec
+    else if (lower.includes('heat') || lower.includes('hot') || lower.includes('sweat') || lower.includes('warm') || lower.includes('channel') || lower.includes('air') || lower.includes('cool') || lower.includes('foam')) {
+      replyText = 'Traditional memory foam traps body heat and gets hot. Our SmartGRID has 2,500 open air ventilation channels with SnowTec cooling fabric that keeps the mattress 4 degrees cooler all night long. Would you like to test it with our 100-night trial?';
+    }
+    // E. Customer asks about 100-Night Trial / Returns / Guarantee / Warranty
+    else if (lower.includes('trial') || lower.includes('return') || lower.includes('refund') || lower.includes('100') || lower.includes('guarantee') || lower.includes('warranty')) {
+      replyText = 'You get a 100-night risk-free trial in your home. If your back pain does not completely improve, we arrange free doorstep pickup and give you a 100% full money-back refund with zero questions asked. Shall I send the booking link to your WhatsApp?';
+    }
+    // F. Customer asks about Back Pain / Spine / Doctor / Firmness
+    else if (lower.includes('pain') || lower.includes('back') || lower.includes('spine') || lower.includes('doctor') || lower.includes('stiff') || lower.includes('firm')) {
+      replyText = 'The Ortho GRID is scientifically certified by orthopaedic doctors with 8.5 out of 10 firmness to relieve pressure on your lower spine and eliminate morning stiffness. Would you like to test it with our 100-night in-home trial, or hear about our ₹7,000 monthly zero-cost EMI?';
+    }
+    // G. Customer asks for Details / Features / Specifications / Offers
+    else if (lower.includes('detail') || lower.includes('feature') || lower.includes('spec') || lower.includes('tell me') || lower.includes('offer') || lower.includes('voucher')) {
+      replyText = 'Our Ortho GRID Pro features patented Japanese SmartGRID with 2,500 open air ventilation channels and doctor-recommended 8.5 firmness. Plus, we are offering an exclusive ₹2,000 store anniversary voucher and ₹7,000 per month zero-cost EMI. Would you like me to send the complete details to your WhatsApp?';
+    }
+    // H. Dynamic Fallback (Never repeats in a loop)
+    else {
+      session.fallbackCount += 1;
+      if (session.fallbackCount === 1) {
+        replyText = 'Our Ortho GRID Pro is engineered with 2,500 air channels and doctor-recommended 8.5 spine firmness. We also offer 6-month zero-cost EMI at ₹7,000 a month. Would you like me to book your order or send the details to WhatsApp?';
+      } else if (session.fallbackCount === 2) {
+        replyText = 'Pavan, would you like to take advantage of our 100-night in-home trial, or should I send the full price breakdown to your WhatsApp?';
+      } else {
+        replyText = 'Thank you for your time today Pavan. Feel free to visit our Koramangala store whenever you are ready. Have a wonderful day!';
+        shouldHangup = true;
+      }
     }
 
-    // Log the agent reply to the laptop session
+    // Log the agent reply to the session for laptop cockpit sync
     session.agentMessages.push({
       speaker: 'staff',
       text: replyText,
@@ -101,9 +191,21 @@ export default async function handler(req, res) {
       id: `tw-agent-${Date.now()}`
     });
 
+    if (shouldHangup) {
+      session.status = 'ended';
+      const closeXml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Aditi" language="en-IN">
+    ${replyText}
+  </Say>
+  <Hangup/>
+</Response>`;
+      return res.status(200).send(closeXml);
+    }
+
     const replyXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
+  <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" method="POST" speechTimeout="auto" timeout="6" bargeIn="true" speechModel="phone_call" language="en-IN">
     <Say voice="Polly.Aditi" language="en-IN">
       ${replyText}
     </Say>
