@@ -65,6 +65,7 @@ export default async function handler(req, res) {
         session.customerMessages.push(msg);
       } else {
         session.agentMessages.push(msg);
+        session.queuedAgentPitch = payload?.text || '';
       }
       session.updatedAt = Date.now();
     } else if (action === 'level') {

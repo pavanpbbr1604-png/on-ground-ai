@@ -291,7 +291,7 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
           }
         }
       } catch (err) {}
-    }, 1200);
+    }, 600);
 
     return () => clearInterval(syncInterval);
   }, [targetPhone]);
@@ -736,10 +736,8 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '3px' }}>
                         <span style={{ fontSize: '11px', fontWeight: 800, color: isStaff ? '#0f6e56' : '#1e293b' }}>
                           {isStaff 
-                            ? 'You (Sales Agent · Mic) 🎙️' 
-                            : callMode === 'ai-agent'
-                              ? `${customerName} (AI Simulated Buyer) 🤖`
-                              : `${customerName} (Customer on Phone) 📱`}
+                            ? 'Sales Agent Desk (You) 🎧' 
+                            : `${customerName} (Caller on Phone) 📱`}
                         </span>
                         <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>{t.time}</span>
                       </div>
