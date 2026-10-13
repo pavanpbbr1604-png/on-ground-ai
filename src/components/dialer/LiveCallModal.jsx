@@ -88,12 +88,19 @@ export default function LiveCallModal({ lead, onClose, onCallCompleted }) {
         content: 'Eliminate customer hesitation: they can sleep on it for 100 nights. If back pain does not improve, we arrange free doorstep pickup and 100% full money-back refund.',
         sayText: 'You can test the mattress in your home for 100 nights. If it does not completely relieve your back pain, we pick it up for free and refund 100% of your money.'
       });
-    } else if (lower.includes('emi') || lower.includes('card') || lower.includes('hdfc') || lower.includes('icici') || lower.includes('payment') || lower.includes('finance') || lower.includes('month')) {
+    } else if (lower.includes('whatsapp') || lower.includes('message') || lower.includes('quote') || lower.includes('send') || lower.includes('share')) {
       setActiveAdvice({
-        title: '6-Month Zero-Cost EMI Available',
-        tag: 'Financing',
-        content: 'Available on all major bank cards (HDFC, ICICI, SBI) at ₹7,000/month for 6 months. Zero down payment, zero interest, instant approval.',
-        sayText: 'We offer 6-month zero-cost EMI starting at ₹7,000 per month on HDFC and ICICI cards, with zero interest and zero down payment.'
+        title: 'WhatsApp Official Quotation Dispatched',
+        tag: 'Instant Closure',
+        content: 'Send product catalogue, discount voucher, and 6M zero-cost EMI checkout link directly to customer WhatsApp at +91 9480850001.',
+        sayText: 'I am sending the complete mattress specifications, discount voucher, and zero-cost EMI quote directly to your WhatsApp at 9480850001 right now.'
+      });
+    } else if (lower.includes('detail') || lower.includes('feature') || lower.includes('spec') || lower.includes('tell me') || lower.includes('give me') || lower.includes('need')) {
+      setActiveAdvice({
+        title: 'Ortho GRID Pro Specifications',
+        tag: 'Product Discovery',
+        content: 'Highlight 3-Zone Japanese SmartGRID, 2,500 ventilation channels, 8.5/10 firm spine support, and 100-night risk-free trial.',
+        sayText: 'Our Ortho GRID Pro features patented Japanese SmartGRID with 2,500 open air ventilation channels and doctor-recommended 8.5 out of 10 firmness.'
       });
     }
   };

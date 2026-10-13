@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   // 1. If customer just answered the phone (Initial Greeting)
   if (!step || step === 'greet') {
-    const greetingText = session.queuedAgentPitch || 'Hello Pavan! This is the retail desk calling from The Sleep Company regarding your visit for our Ortho GRID Pro mattress. Are you experiencing lower back pain or morning stiffness during sleep?';
+    const greetingText = session.queuedAgentPitch || 'Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store. We noticed you recently tested our Ortho GRID Pro mattress and were inquiring about back support. Are you looking to upgrade your mattress for spine relief?';
     session.queuedAgentPitch = null; // Clear after using
 
     const greetingXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   </Gather>
   <Gather input="speech" action="https://on-groundai.vercel.app/api/twiml?step=reply&amp;phone=${cleanPhone}" speechTimeout="2" timeout="8" bargeIn="true" language="en-IN">
     <Say voice="Polly.Aditi" language="en-IN">
-      I am listening. Please tell us about your sleeping posture or mattress concerns.
+      I am listening Pavan. Please tell us what you are looking for in your mattress.
     </Say>
     <Pause length="1"/>
   </Gather>
@@ -77,14 +77,20 @@ export default async function handler(req, res) {
     if (session.queuedAgentPitch) {
       replyText = session.queuedAgentPitch;
       session.queuedAgentPitch = null;
-    } else if (lower.includes('price') || lower.includes('cost') || lower.includes('expensive') || lower.includes('wakefit') || lower.includes('budget') || lower.includes('discount')) {
-      replyText = 'Unlike regular memory foam that sags within two years, our hyper-elastic Japanese SmartGRID comes with a 10-year warranty with zero sagging. With our 6-month zero-cost EMI, it is just ₹7,000 a month on HDFC or ICICI cards.';
+    } else if (lower.includes('whatsapp') || lower.includes('message') || lower.includes('quote') || lower.includes('send') || lower.includes('share')) {
+      replyText = 'Certainly Pavan! I will share the complete mattress catalogue, discount voucher, and zero-cost EMI quote directly to your WhatsApp at 9480850001 right away.';
+    } else if (lower.includes('emi') || lower.includes('cost') || lower.includes('price') || lower.includes('expensive') || lower.includes('wakefit') || lower.includes('budget') || lower.includes('discount') || lower.includes('month') || lower.includes('7000') || lower.includes('42000')) {
+      replyText = 'The King size is ₹42,000, and we offer a 6-month zero-cost EMI on HDFC and ICICI cards at just ₹7,000 per month with zero down payment. Plus, unlike cheap foam, our patented SmartGRID comes with a 10-year warranty with zero sagging.';
+    } else if (lower.includes('detail') || lower.includes('feature') || lower.includes('spec') || lower.includes('tell me') || lower.includes('need') || lower.includes('give me')) {
+      replyText = 'Our Ortho GRID Pro features patented Japanese SmartGRID with 2,500 open air ventilation channels and doctor-recommended 8.5 out of 10 firmness that keeps your spine naturally aligned. Would you like to hear about our ₹7,000 monthly zero-cost EMI?';
+    } else if (lower.includes('trial') || lower.includes('return') || lower.includes('refund') || lower.includes('100') || lower.includes('guarantee')) {
+      replyText = 'You get a 100-night risk-free trial in your home. If your back pain does not completely improve, we arrange free doorstep pickup and give you a 100% full refund with zero questions asked.';
     } else if (lower.includes('heat') || lower.includes('hot') || lower.includes('sweat') || lower.includes('warm') || lower.includes('channel') || lower.includes('air')) {
       replyText = 'Traditional memory foam traps body heat, but our SmartGRID features 2,500 open air ventilation channels paired with SnowTec cooling fabric that keeps the mattress 4 degrees cooler all night.';
-    } else if (lower.includes('trial') || lower.includes('return') || lower.includes('refund') || lower.includes('100') || lower.includes('guarantee')) {
-      replyText = 'You get a 100-night risk-free trial in your home. If your back pain does not completely improve, we arrange free doorstep pickup and give you a 100% full refund.';
-    } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('yes') || lower.includes('pain') || lower.includes('back')) {
-      replyText = 'Our patented Japanese SmartGRID gives you 8.5 out of 10 firmness, engineered specifically to support your lower back and keep your spine naturally aligned. Would you like to hear about our 6-month zero-cost EMI?';
+    } else if (lower.includes('pain') || lower.includes('back') || lower.includes('spine') || lower.includes('doctor') || lower.includes('stiff')) {
+      replyText = 'The Ortho GRID is scientifically certified by orthopaedic doctors to cradle your hips while maintaining natural lumbar support. Would you like to test it with our 100-night risk-free in-home trial?';
+    } else if (lower.includes('yes') || lower.includes('okay') || lower.includes('sure') || lower.includes('hello') || lower.includes('hi')) {
+      replyText = 'Wonderful Pavan! We have the Ortho GRID ready in stock at our Koramangala store with free doorstep delivery within 24 hours. Would you like to proceed with the ₹7,000 monthly zero-cost EMI?';
     } else {
       replyText = 'Our Ortho GRID mattress is engineered with 2,500 air channels and doctor-recommended 8.5 out of 10 firmness. We also offer 6-month zero-cost EMI starting at ₹7,000 a month.';
     }
@@ -106,7 +112,7 @@ export default async function handler(req, res) {
     <Pause length="1"/>
   </Gather>
   <Say voice="Polly.Aditi" language="en-IN">
-    Thank you for speaking with The Sleep Company. Have a wonderful day!
+    Thank you for speaking with The Sleep Company, Pavan. Have a wonderful day!
   </Say>
   <Hangup/>
 </Response>`;
