@@ -228,6 +228,7 @@ In accordance with the assignment guidelines:
 ## 📬 Contact & Candidate Information
 
 - **Candidate:** Pavan B. R.
+- **Education:** CMR Institute of Technology (CMRIT), Bengaluru
 - **Phone:** +91 9480850001
 - **Email:** pavanpbbr.1604@gmail.com
 - **LinkedIn / GitHub:** [github.com/pavanpbbr1604-png](https://github.com/pavanpbbr1604-png)
