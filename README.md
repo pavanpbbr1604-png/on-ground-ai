@@ -17,9 +17,9 @@
 
 ## 🌟 Executive Summary
 
-This application is a ground-up rebuild of the **On-Ground.ai Call Centre Staff App** for frontline retail agents, pre-configured with real-world conversational intelligence from **The Sleep Company** (Koramangala store). 
+This application is a ground-up rebuild of the **On-Ground.ai Call Centre Staff App** designed for frontline agents handling outbound and inbound call workflows.
 
-Unlike a static prototype or simulated screen mockup, this project implements a **genuine, working Web-to-Phone carrier calling engine** that dials real mobile phone numbers (E.164 formatted), captures and transcribes spoken speech, runs an autonomous deal-closing voice AI agent, and streams the transcript live to the agent's cockpit with zero-latency product battle cards.
+Unlike a static prototype or simulated screen mockup, this project implements a **genuine, working Web-to-Phone carrier calling engine** that dials real mobile phone numbers (E.164 formatted), captures and transcribes spoken speech, runs an autonomous conversational voice AI agent, and streams the transcript live to the agent's cockpit with low-latency dynamic battle cards.
 
 ```
                           ┌────────────────────────────────────────────────────────┐
@@ -51,29 +51,24 @@ Unlike a static prototype or simulated screen mockup, this project implements a 
 ### 1. 📞 Genuine Web-to-Phone Carrier Calling (No Mocks, Zero Simulations)
 - **Real PSTN Telephony Gateway (`api/call.js`)**: Outbound dialing via carrier telecom infrastructure directly to physical mobile phone numbers (E.164 carrier routing). When the call button is clicked, the customer's physical phone rings immediately.
 - **Dual Calling Modalities**:
-  - 🤖 **Avani AI Voice Closer (AI-to-Human)**: An autonomous voice closer running on Twilio carrier voice using natural Indian English prosody (`Polly.Aditi`). Avani introduces herself by store location, discovers customer needs, handles objections, and closes orders.
+  - 🤖 **Avani AI Voice Agent (AI-to-Human)**: An autonomous voice agent running on Twilio carrier voice using natural Indian English prosody (`Polly.Aditi`). Avani introduces the call, gathers customer inquiries, resolves objections, and executes conversational workflows.
   - 👤 **Human Web-to-Phone (Agent-to-Customer)**: Full hardware microphone capture (`navigator.mediaDevices.getUserMedia`) with a real-time Web Audio API VU equalizer meter.
 - **Smart Laptop Mic Isolation**: During AI carrier calls, the laptop microphone is cleanly muted to prevent ambient room noise from corrupting the customer call or generating phantom transcript bubbles.
 
-### 2. 🧠 Deal-Closing Conversational State Machine (`api/twiml.js`)
-Avani AI is equipped with a non-linear, multi-turn sales closer engine:
-- **Instant Deal Closure**: When the customer agrees (*"Yes"*, *"Book it"*, *"Order"*, *"WhatsApp"*, *"I agree"*), Avani locks in the 6-month zero-cost EMI at ₹7,000/month, dispatches confirmation to WhatsApp, thanks the caller, and cleanly hangs up (`<Hangup/>`).
-- **Two-Stage Objection Handling**: When the caller hesitates (*"No"*, *"Not interested"*, *"Pass"*):
-  - *Turn 1*: Delivers an exclusive store anniversary voucher (extra ₹2,000 accessory discount) and highlights the 100-night risk-free trial.
-  - *Turn 2 / Insistence*: Gracefully thanks the customer, wishes them well, and terminates the call politely.
-- **Objection Handlers**: Instant, contextual answers for **₹7,000/mo EMI**, **2,500 Air Channels & SnowTec Cooling**, **8.5 Spine Firmness & Doctor Approval**, and **100-Night Trial & 10-Year Warranty**.
-- **Loop Prevention**: Dynamic fallback counters ensure the AI never gets stuck repeating the same sentence.
+### 2. 🧠 Conversational State Machine & Dialogue Engine (`api/twiml.js`)
+Avani AI is powered by a non-linear, multi-turn dialogue management state machine:
+- **Intent Recognition & Resolution**: When the customer confirms or agrees (*"Yes"*, *"Book it"*, *"Order"*, *"Send details"*, *"I agree"*), Avani acknowledges the request, dispatches confirmation, thanks the caller, and cleanly hangs up (`<Hangup/>`).
+- **Two-Stage Objection & Hesitation Handling**: When the caller hesitates (*"No"*, *"Not interested"*, *"Need time"*):
+  - *Turn 1*: Provides clarifying value propositions, reassurance, and policy guarantees.
+  - *Turn 2 / Insistence*: Gracefully thanks the customer for their time and terminates the call politely.
+- **Contextual Inquiry Handlers**: Instant, contextual answers for pricing queries, specifications, product assurance, and trial/return guarantees.
+- **Loop Prevention & Fallbacks**: Dynamic fallback counters ensure the AI never gets stuck repeating the same sentence and preserves conversational flow.
 
-### 3. ⚡ Live Real-Time Chat Transcription & Dynamic Sales Dossier (`LiveCallModal.jsx`)
+### 3. ⚡ Live Real-Time Chat Transcription & Dynamic Battle Cards (`LiveCallModal.jsx`)
 - **Instant Opening Greeting**: Avani's opening dialogue renders in the chat window the second the call connects.
 - **High-Speed Cloud Sync (<250ms)**: Spoken customer turns from the phone and bot responses synchronize to the screen in real time in strict chronological order.
-- **Dynamic Keyword-Driven Battle Cards**: As keywords are spoken, the right-side dossier automatically illuminates the matching specification in vibrant green with an active glow:
-  - Mentioning *heat/cooling* &rarr; Highlights **2,500 Air Channels & SnowTec** (4°C cooler than memory foam).
-  - Mentioning *pain/spine* &rarr; Highlights **8.5/10 Firmness** (doctor-certified alignment).
-  - Mentioning *EMI/price* &rarr; Highlights **₹7,000/mo Zero-Cost EMI** on HDFC/ICICI cards.
-  - Mentioning *trial/returns* &rarr; Highlights **100-Night In-Home Trial** & 100% refund.
-  - Mentioning *offers/discounts* &rarr; Highlights **₹2,000 Store Anniversary Voucher**.
-- **Live SOP Compliance Checklist**: Ticks off milestones automatically as the conversation covers Opening &rarr; Needs Discovery &rarr; Product Pitch &rarr; EMI &rarr; Trial &rarr; Deal Closing.
+- **Dynamic Keyword-Driven Battle Cards**: As keywords are spoken on the call, the cockpit dynamically parses spoken terms and illuminates matching intelligence cards on the right-side dossier in vibrant green with an active glow.
+- **Live SOP Compliance Checklist**: Evaluates caller milestones automatically as the conversation covers Opening &rarr; Needs Discovery &rarr; Solution Pitch &rarr; Pricing/Terms &rarr; Clarification &rarr; Resolution.
 
 ### 4. 🎯 On-Ground.ai Proven Retail Conversion Rules
 - **+23.6pp Shopper Naming Rule**: Integrates On-Ground's 5,000-conversation retail floor benchmark, prompting the rep in real time to address the shopper directly by first name (*"Pavan"*) for an immediate conversion lift.
@@ -91,7 +86,7 @@ Avani AI is equipped with a non-linear, multi-turn sales closer engine:
 | **4. Calendar** | Monthly schedule & follow-ups | Aligned to **October 2026** with interactive event dots, today quick-jump, and scheduled callback agenda. |
 | **5. Pulse Omnichannel** | Channels, Customer WhatsApp, Kudos | Slack-style channels, interactive resolution of the pinned QA Greeting score card, Kudos feed, and WhatsApp customer thread featuring Pavan B R with instant **Call** dispatch. |
 | **6. Leads Dossier Modal** | ICP badge, intent, buying signals | Complete buyer profile with collapsible journey timeline, verified customer signals, and keyboard shortcut navigation. |
-| **7. "Ask Avani" Drawer** | Header-triggered AI pitch drawer | One-tap objection chips (Wakefit comparison, 100-night trial, zero-cost EMI) + freeform sales assistant chat. |
+| **7. "Ask Avani" Drawer** | Header-triggered AI pitch drawer | One-tap objection guidance chips + freeform sales assistant chat. |
 
 ---
 
@@ -151,7 +146,7 @@ on_ground.ai/
 │   │   └── common/
 │   │       └── ErrorBoundary.jsx # Defensive error boundary wrapper
 │   ├── data/
-│   │   ├── leadsData.js          # Retail mattress leads (Pavan B R #1 ranked lead)
+│   │   ├── leadsData.js          # Prioritized lead queue dataset
 │   │   ├── callsData.js          # SOP criteria, missed calls, and audit quotes
 │   │   ├── pulseData.js          # Pulse channels, WhatsApp threads, and kudos
 │   │   └── calendarData.js       # Callbacks and store visit appointments
@@ -204,13 +199,13 @@ npm run preview
    - Avani's opening greeting appears immediately in the live chat stream.
 5. **On Your Physical Mobile Phone**:
    - Your phone rings with the carrier call. Answer on speakerphone.
-   - Avani greets: *"Hello Pavan! This is Avani calling from The Sleep Company, Koramangala store..."*
+   - The voice agent initiates the call with a natural conversational greeting.
 6. **Speak into Your Phone**:
-   - Say: *"What is the 6-month EMI?"* &rarr; Transcribed live into the chat; Avani explains ₹7,000/mo.
-   - The right side highlights the **₹7,000/mo EMI** card in green and ticks off the SOP milestone.
-7. **Close the Deal**:
-   - Say: *"Yes, please book it and send to my WhatsApp."*
-   - Avani confirms your order, locks in zero-cost EMI, thanks you, and hangs up the call.
+   - Inquire about details or ask a question &rarr; Transcribed live into the cockpit chat stream.
+   - The relevant battle card illuminates dynamically, and the live SOP compliance milestone automatically ticks off.
+7. **Conclude the Call**:
+   - Confirm next steps or conclude the conversation.
+   - The AI agent acknowledges your response, confirms resolution, thanks you, and cleanly terminates the carrier call.
 
 ---
 
